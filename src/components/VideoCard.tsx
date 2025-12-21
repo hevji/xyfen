@@ -1,5 +1,6 @@
 import { Clock, Eye, Download, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import DownloadProgress, { DownloadStatus } from "@/components/DownloadProgress";
 
 // Interface for video metadata returned from the backend
 interface VideoInfo {
@@ -15,18 +16,41 @@ interface VideoInfo {
   }>;
 }
 
+interface DownloadState {
+  id: string;
+  status: DownloadStatus;
+  progress: number;
+  quality: string;
+  downloadUrl?: string;
+  error?: string;
+}
+
 interface VideoCardProps {
   video: VideoInfo;
-  onDownload: (quality: string) => void;
-  isDownloading: boolean;
+  onDownload: (quality: string) => string;
+  downloads: Map<string, DownloadState>;
+  onDownloadFile: (downloadId: string) => void;
+  onRetry: (downloadId: string) => void;
+  getActiveDownload: (quality: string) => DownloadState | null;
 }
 
 /**
  * VideoCard Component
- * Displays fetched video information with download options
- * Features glassmorphism design and smooth animations
+ * Displays fetched video information with download options and progress
  */
-const VideoCard = ({ video, onDownload, isDownloading }: VideoCardProps) => {
+const VideoCard = ({ 
+  video, 
+  onDownload, 
+  downloads,
+  onDownloadFile,
+  onRetry,
+  getActiveDownload,
+}: VideoCardProps) => {
+  // Get array of active downloads for this video
+  const activeDownloads = Array.from(downloads.values()).filter(
+    d => d.status !== 'error' || d.status === 'error'
+  );
+
   return (
     <div className="glass-strong rounded-2xl overflow-hidden animate-scale-in shadow-glow">
       {/* Thumbnail Section with Play Overlay */}
@@ -68,27 +92,56 @@ const VideoCard = ({ video, onDownload, isDownloading }: VideoCardProps) => {
           </div>
         </div>
 
+        {/* Active Downloads */}
+        {activeDownloads.length > 0 && (
+          <div className="space-y-3">
+            <h4 className="text-sm font-medium text-muted-foreground">
+              Downloads
+            </h4>
+            {activeDownloads.map(download => (
+              <DownloadProgress
+                key={download.id}
+                status={download.status}
+                progress={download.progress}
+                quality={download.quality}
+                downloadUrl={download.downloadUrl}
+                error={download.error}
+                onDownloadClick={() => onDownloadFile(download.id)}
+                onRetry={() => onRetry(download.id)}
+              />
+            ))}
+          </div>
+        )}
+
         {/* Download Options */}
         <div className="pt-4 border-t border-border/50">
           <h4 className="text-sm font-medium text-muted-foreground mb-3">
             Download Options
           </h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {video.formats.map((format, index) => (
-              <Button
-                key={index}
-                variant="glass"
-                className="justify-between group"
-                onClick={() => onDownload(format.quality)}
-                disabled={isDownloading}
-              >
-                <span className="flex items-center gap-2">
-                  <Download className="w-4 h-4 group-hover:text-primary transition-colors" />
-                  <span>{format.quality}</span>
-                </span>
-                <span className="text-muted-foreground text-xs">{format.size}</span>
-              </Button>
-            ))}
+            {video.formats.map((format, index) => {
+              const activeDownload = getActiveDownload(format.quality);
+              const isDownloading = activeDownload && 
+                (activeDownload.status === 'downloading' || activeDownload.status === 'converting');
+              
+              return (
+                <Button
+                  key={index}
+                  variant="glass"
+                  className="justify-between group"
+                  onClick={() => onDownload(format.quality)}
+                  disabled={!!isDownloading}
+                >
+                  <span className="flex items-center gap-2">
+                    <Download className="w-4 h-4 group-hover:text-primary transition-colors" />
+                    <span>{format.quality}</span>
+                  </span>
+                  <span className="text-muted-foreground text-xs">
+                    {isDownloading ? 'In progress...' : format.size}
+                  </span>
+                </Button>
+              );
+            })}
           </div>
         </div>
       </div>

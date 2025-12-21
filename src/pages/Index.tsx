@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Download, Sparkles, Shield, Zap, Settings } from "lucide-react";
+import { Sparkles, Shield, Zap, Settings } from "lucide-react";
 import Header from "@/components/Header";
 import UrlInput from "@/components/UrlInput";
 import VideoCard from "@/components/VideoCard";
@@ -7,6 +7,7 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 import BackendInstructions from "@/components/BackendInstructions";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useDownload } from "@/hooks/useDownload";
 
 // Video metadata interface
 interface VideoInfo {
@@ -22,24 +23,26 @@ interface VideoInfo {
   }>;
 }
 
+// API endpoint - change this to your Flask backend URL
+const API_URL = "http://localhost:5000";
+
 /**
  * Index Page - Main YouTube Downloader Interface
- * Features:
- * - URL input with validation
- * - Video metadata display
- * - Download options
- * - Backend setup instructions
  */
 const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [videoInfo, setVideoInfo] = useState<VideoInfo | null>(null);
   const [currentUrl, setCurrentUrl] = useState("");
   const [showInstructions, setShowInstructions] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(false);
   const { toast } = useToast();
-
-  // API endpoint - change this to your Flask backend URL
-  const API_URL = "http://localhost:5000";
+  
+  const {
+    downloads,
+    startDownload,
+    downloadFile,
+    retryDownload,
+    getActiveDownload,
+  } = useDownload({ apiUrl: API_URL });
 
   /**
    * Fetch video information from the backend
@@ -84,37 +87,23 @@ const Index = () => {
   /**
    * Handle video download request
    */
-  const handleDownload = async (quality: string) => {
-    setIsDownloading(true);
+  const handleDownload = (quality: string): string => {
+    toast({
+      title: "Download Started",
+      description: `Starting ${quality} download...`,
+    });
+    
+    // This returns the download ID synchronously by triggering the async operation
+    const downloadId = `${Date.now()}-${quality}`;
+    startDownload(currentUrl, quality);
+    return downloadId;
+  };
 
-    try {
-      const response = await fetch(`${API_URL}/api/download`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ url: currentUrl, quality }),
-      });
-
-      const data = await response.json();
-      
-      if (response.ok) {
-        toast({
-          title: "Download Started",
-          description: `Downloading in ${quality} quality.`,
-        });
-      } else {
-        throw new Error(data.error);
-      }
-    } catch (error) {
-      toast({
-        title: "Download Error",
-        description: "Failed to start download. Check backend connection.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsDownloading(false);
-    }
+  /**
+   * Handle retry for failed downloads
+   */
+  const handleRetry = (downloadId: string) => {
+    retryDownload(downloadId, currentUrl);
   };
 
   return (
@@ -160,7 +149,10 @@ const Index = () => {
               <VideoCard
                 video={videoInfo}
                 onDownload={handleDownload}
-                isDownloading={isDownloading}
+                downloads={downloads}
+                onDownloadFile={downloadFile}
+                onRetry={handleRetry}
+                getActiveDownload={getActiveDownload}
               />
             </section>
           )}
