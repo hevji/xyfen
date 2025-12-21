@@ -5,8 +5,9 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  // GitHub Pages base URL
-  base: "/vidgrab/",
+  // Use /vidgrab/ for GitHub Pages, otherwise use root
+  // Set GITHUB_PAGES=true in your build command for GitHub Pages deployment
+  base: process.env.GITHUB_PAGES ? "/vidgrab/" : "/",
   server: {
     host: "::",
     port: 8080,
