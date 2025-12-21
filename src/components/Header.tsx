@@ -22,7 +22,7 @@ const Header = () => {
         {/* Navigation */}
         <nav className="flex items-center gap-4">
           <a
-            href="https://github.com"
+            href="https://github.com/hevji"
             target="_blank"
             rel="noopener noreferrer"
             className="text-muted-foreground hover:text-foreground transition-colors p-2 rounded-lg hover:bg-secondary"
