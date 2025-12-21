@@ -1,4 +1,4 @@
-Welcome to *Hevji Lovable App**, a simple yet powerful web tool demonstrating frontend-backend interaction using Python, Flask, and modern web design.
+Welcome to **Hevji Lovable App**, a simple yet powerful web tool demonstrating frontend-backend interaction using Python, Flask, and modern web design.
 
 This project was generated with **Lovable.dev** and showcases a fully functional website that interacts with a backend server.
 
