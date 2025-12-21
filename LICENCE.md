@@ -1,6 +1,7 @@
+cat << 'EOF' > LICENSE
 MIT License
 
-Copyright (c) 2025 hevji
+Copyright (c) 2025 [YOUR NAME OR GITHUB USERNAME]
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
