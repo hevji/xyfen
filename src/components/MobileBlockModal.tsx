@@ -33,14 +33,22 @@ const MobileBlockModal = () => {
 
   return (
     <div className="fixed inset-0 z-[200] bg-background flex items-center justify-center p-6">
-      <div className="glass-strong rounded-2xl p-8 max-w-sm w-full text-center space-y-6 animate-fade-in">
+      {/* Background decoration */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-80 h-80 bg-primary/10 rounded-full blur-3xl animate-pulse-slow" />
+      </div>
+
+      <div className="glass-strong rounded-3xl p-8 max-w-sm w-full text-center space-y-6 animate-fade-in relative">
         {/* Mobile Icon */}
-        <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mx-auto">
-          <Smartphone className="w-10 h-10 text-muted-foreground" />
+        <div className="relative mx-auto w-20 h-20">
+          <div className="absolute inset-0 bg-muted rounded-full blur-lg" />
+          <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-muted to-secondary flex items-center justify-center border border-border/50">
+            <Smartphone className="w-9 h-9 text-muted-foreground" />
+          </div>
         </div>
 
         {/* Message */}
-        <p className="text-foreground leading-relaxed text-lg">
+        <p className="text-foreground leading-relaxed text-lg font-medium">
           This website is not available on your type of telephone, we are
           working on it. Sorry for the inconvenience.
         </p>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, Search, AlertCircle } from "lucide-react";
+import { Link, Search, AlertCircle, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
@@ -16,6 +16,7 @@ interface UrlInputProps {
 const UrlInput = ({ onSubmit, isLoading }: UrlInputProps) => {
   const [url, setUrl] = useState("");
   const [error, setError] = useState("");
+  const [isFocused, setIsFocused] = useState(false);
 
   // Validate YouTube URL format
   const validateUrl = (input: string): boolean => {
@@ -43,13 +44,19 @@ const UrlInput = ({ onSubmit, isLoading }: UrlInputProps) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-2xl mx-auto space-y-3">
+    <form onSubmit={handleSubmit} className="w-full max-w-2xl mx-auto space-y-4">
       {/* Input container with glass effect */}
-      <div className="relative glass-strong rounded-xl p-2 shadow-glow">
+      <div 
+        className={`relative glass-strong rounded-2xl p-2 transition-all duration-500 ${
+          isFocused 
+            ? 'shadow-glow-lg ring-2 ring-primary/30' 
+            : 'shadow-glow'
+        }`}
+      >
         <div className="flex items-center gap-2">
           {/* URL Icon */}
-          <div className="pl-3">
-            <Link className="w-5 h-5 text-muted-foreground" />
+          <div className="pl-4">
+            <Link className={`w-5 h-5 transition-colors duration-300 ${isFocused ? 'text-primary' : 'text-muted-foreground'}`} />
           </div>
 
           {/* URL Input */}
@@ -61,7 +68,9 @@ const UrlInput = ({ onSubmit, isLoading }: UrlInputProps) => {
               setUrl(e.target.value);
               setError(""); // Clear error on input
             }}
-            className="flex-1 border-0 bg-transparent focus-visible:ring-0 text-base"
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+            className="flex-1 border-0 bg-transparent focus-visible:ring-0 text-base h-12 placeholder:text-muted-foreground/60"
             disabled={isLoading}
           />
 
@@ -71,7 +80,7 @@ const UrlInput = ({ onSubmit, isLoading }: UrlInputProps) => {
             variant="hero"
             size="lg"
             disabled={isLoading}
-            className="shrink-0"
+            className="shrink-0 gap-2 group"
           >
             {isLoading ? (
               <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
@@ -79,6 +88,7 @@ const UrlInput = ({ onSubmit, isLoading }: UrlInputProps) => {
               <>
                 <Search className="w-5 h-5" />
                 <span className="hidden sm:inline">Fetch Video</span>
+                <ArrowRight className="w-4 h-4 hidden sm:inline transition-transform duration-300 group-hover:translate-x-1" />
               </>
             )}
           </Button>
@@ -87,9 +97,9 @@ const UrlInput = ({ onSubmit, isLoading }: UrlInputProps) => {
 
       {/* Error message */}
       {error && (
-        <div className="flex items-center gap-2 text-destructive text-sm px-2 animate-fade-in">
+        <div className="flex items-center justify-center gap-2 text-destructive text-sm px-2 animate-fade-in">
           <AlertCircle className="w-4 h-4" />
-          <span>{error}</span>
+          <span className="font-medium">{error}</span>
         </div>
       )}
 
