@@ -50,7 +50,7 @@ const WarningModal = () => {
 
         {/* Warning Title */}
         <h2 className="font-display text-3xl font-bold text-foreground">
-          ⚠️ Warning ⚠️
+          Note
         </h2>
 
         {/* Warning Text */}
