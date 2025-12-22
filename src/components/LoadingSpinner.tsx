@@ -1,25 +1,36 @@
+import { Loader2 } from "lucide-react";
+
 /**
  * LoadingSpinner Component
- * Animated loading indicator with pulsing circles
- * Uses the primary color from the design system
+ * Animated loading spinner with modern styling
  */
 const LoadingSpinner = () => {
   return (
-    <div className="flex flex-col items-center justify-center py-12 space-y-4">
-      {/* Animated spinner rings */}
-      <div className="relative w-16 h-16">
+    <div className="flex flex-col items-center justify-center py-16 space-y-6 animate-fade-in">
+      {/* Spinner container with glow */}
+      <div className="relative">
+        {/* Glow effect */}
+        <div className="absolute inset-0 bg-primary/30 rounded-full blur-xl animate-pulse-slow" />
+        
         {/* Outer ring */}
-        <div className="absolute inset-0 rounded-full border-2 border-primary/20" />
-        {/* Spinning ring */}
-        <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-primary animate-spin" />
-        {/* Inner pulsing dot */}
-        <div className="absolute inset-4 rounded-full bg-primary/20 animate-pulse" />
+        <div className="relative w-20 h-20 rounded-full border-4 border-secondary flex items-center justify-center">
+          {/* Inner spinning gradient */}
+          <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-primary border-r-primary/50 animate-spin" />
+          
+          {/* Center icon */}
+          <Loader2 className="w-8 h-8 text-primary animate-spin" style={{ animationDuration: '1.5s' }} />
+        </div>
       </div>
-      
+
       {/* Loading text */}
-      <p className="text-muted-foreground text-sm font-medium animate-pulse">
-        Fetching video info...
-      </p>
+      <div className="text-center space-y-2">
+        <p className="text-lg font-display font-semibold text-foreground">
+          Fetching Video Info
+        </p>
+        <p className="text-sm text-muted-foreground">
+          Please wait while we process your request...
+        </p>
+      </div>
     </div>
   );
 };

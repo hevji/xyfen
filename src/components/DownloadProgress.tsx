@@ -19,26 +19,31 @@ const statusConfig = {
     icon: Download,
     text: 'Ready to download',
     color: 'text-muted-foreground',
+    bgColor: 'bg-secondary',
   },
   downloading: {
     icon: Loader2,
     text: 'Downloading...',
     color: 'text-primary',
+    bgColor: 'bg-primary/10',
   },
   converting: {
     icon: Loader2,
     text: 'Converting...',
-    color: 'text-primary',
+    color: 'text-accent',
+    bgColor: 'bg-accent/10',
   },
   ready: {
     icon: CheckCircle,
     text: 'Ready to download',
     color: 'text-green-500',
+    bgColor: 'bg-green-500/10',
   },
   error: {
     icon: AlertCircle,
     text: 'Download failed',
     color: 'text-destructive',
+    bgColor: 'bg-destructive/10',
   },
 };
 
@@ -60,22 +65,22 @@ const DownloadProgress = ({
   const isAnimating = status === 'downloading' || status === 'converting';
 
   return (
-    <div className="glass rounded-xl p-4 space-y-4 animate-fade-in">
+    <div className="glass rounded-2xl p-5 space-y-4 animate-fade-in border border-border/30">
       {/* Header with status */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-lg bg-secondary flex items-center justify-center ${config.color}`}>
+        <div className="flex items-center gap-4">
+          <div className={`w-12 h-12 rounded-xl ${config.bgColor} flex items-center justify-center ${config.color} transition-all duration-300`}>
             <Icon className={`w-5 h-5 ${isAnimating ? 'animate-spin' : ''}`} />
           </div>
           <div>
-            <p className="font-medium text-foreground">{quality} Quality</p>
-            <p className={`text-sm ${config.color}`}>{error || config.text}</p>
+            <p className="font-semibold text-foreground">{quality} Quality</p>
+            <p className={`text-sm ${config.color} font-medium`}>{error || config.text}</p>
           </div>
         </div>
         
         {/* Progress percentage */}
         {(status === 'downloading' || status === 'converting') && (
-          <span className="text-2xl font-display font-bold text-primary">
+          <span className="text-3xl font-display font-bold text-primary tabular-nums">
             {Math.round(progress)}%
           </span>
         )}
@@ -84,8 +89,14 @@ const DownloadProgress = ({
       {/* Progress bar */}
       {(status === 'downloading' || status === 'converting') && (
         <div className="space-y-2">
-          <Progress value={progress} className="h-2" />
-          <p className="text-xs text-muted-foreground text-center">
+          <div className="relative">
+            <Progress value={progress} className="h-2.5" />
+            <div 
+              className="absolute top-0 left-0 h-2.5 bg-gradient-to-r from-primary via-accent to-primary rounded-full transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground text-center font-medium">
             {status === 'downloading' ? 'Downloading video...' : 'Converting to MP4...'}
           </p>
         </div>
@@ -96,7 +107,7 @@ const DownloadProgress = ({
         <Button
           variant="hero"
           size="lg"
-          className="w-full gap-2"
+          className="w-full gap-2.5"
           onClick={onDownloadClick}
         >
           <FileVideo className="w-5 h-5" />
@@ -109,7 +120,7 @@ const DownloadProgress = ({
         <Button
           variant="outline"
           size="lg"
-          className="w-full gap-2"
+          className="w-full gap-2.5"
           onClick={onRetry}
         >
           <Download className="w-5 h-5" />
