@@ -10,14 +10,12 @@ const MobileBlockModal = () => {
 
   useEffect(() => {
     const checkMobile = () => {
-      // Check if device is a mobile phone (not tablet)
       const userAgent = navigator.userAgent || navigator.vendor;
       const isMobileDevice =
         /android.*mobile|iphone|ipod|blackberry|iemobile|opera mini/i.test(
           userAgent.toLowerCase()
         );
       
-      // Additional check for touch capability and small screen
       const isSmallScreen = window.innerWidth < 768;
       const hasTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
       
@@ -28,6 +26,22 @@ const MobileBlockModal = () => {
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
+
+  // ✅ Lock body scroll when modal is open
+  useEffect(() => {
+    if (isMobile) {
+      document.body.style.overflow = "hidden";
+      document.body.style.height = "100vh";
+    } else {
+      document.body.style.overflow = "";
+      document.body.style.height = "";
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+      document.body.style.height = "";
+    };
+  }, [isMobile]);
 
   if (!isMobile) return null;
 
