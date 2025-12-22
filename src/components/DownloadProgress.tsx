@@ -107,7 +107,7 @@ const DownloadProgress = ({
         <Button
           variant="hero"
           size="lg"
-          className="w-full gap-2.5"
+          className="w-full gap-2.5 py-4 sm:py-5"
           onClick={onDownloadClick}
         >
           <FileVideo className="w-5 h-5" />
@@ -120,7 +120,7 @@ const DownloadProgress = ({
         <Button
           variant="outline"
           size="lg"
-          className="w-full gap-2.5"
+          className="w-full gap-2.5 py-4 sm:py-5"
           onClick={onRetry}
         >
           <Download className="w-5 h-5" />
