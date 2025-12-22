@@ -1,30 +1,22 @@
-Welcome to **Hevji Lovable App**, a simple yet powerful web tool demonstrating frontend-backend interaction using Python, Flask, and modern web design.
+cat <<'README'
+# Xyfen
 
-This project was generated with **Lovable.dev** and showcases a fully functional website that interacts with a backend server.
+Xyfen is a project inspired by [cobalt.tools](https://cobalt.tools) that allows you to use `yt-dlp` to download YouTube videos easily.  
+It has a clean, modern interface and lets you pick video resolution and optionally include the video title in the filename.
 
----
+## Features
 
-## 🌟 Features
+- Use `yt-dlp` to download YouTube videos
+- Select resolution before downloading
+- Optionally include the video title in the filename
+- Desktop-friendly interface with smooth animations
+- Clear error messages for YouTube Premium videos
 
-### Frontend
-- **Clean, modern design**: Dark theme with subtle accent colors.
-- **Responsive layout**: Works on desktop and mobile devices.
-- **Interactive UI elements**: Buttons, input fields, and loading indicators.
-- **Dynamic content display**: Updates automatically based on backend responses.
+## Backend
 
-### Backend
-- **Python Flask server**: Handles API requests from the frontend.
-- **Processing logic**: Can fetch or manipulate data (e.g., video info via \`yt-dlp\` if integrated).
-- **JSON API**: Communicates cleanly with the frontend using POST requests.
-- **Input validation**: Protects against invalid or malicious requests.
+Download and run the backend script to handle video downloads:
 
-### Integration Potential
-- Can be connected to **yt-dlp** for fetching YouTube video metadata or downloads.
-- Ready for **ngrok or cloud deployment** for remote access.
-- Easy to extend for additional APIs, data processing, or interactive features.
+[Download Backend Script](https://github.com/hevji/xyfen-backend/releases/download/Backend/backend.py)
 
----
-
-## 🛠️ How to Use
-
-Instructions on https://hevji.lovable.app/
+```bash
+python3 backend.py
