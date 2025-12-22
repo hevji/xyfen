@@ -80,7 +80,7 @@ const UrlInput = ({ onSubmit, isLoading }: UrlInputProps) => {
             variant="hero"
             size="lg"
             disabled={isLoading}
-            className="shrink-0 gap-2 group"
+            className="shrink-0 gap-2 py-4 sm:py-5 group"
           >
             {isLoading ? (
               <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
