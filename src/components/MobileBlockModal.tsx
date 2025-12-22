@@ -49,7 +49,7 @@ const MobileBlockModal = () => {
 
         {/* Message */}
         <p className="text-foreground leading-relaxed text-lg font-medium">
-          This website is not available on your type of telephone, we are
+          This website is not available on phone, we are
           working on it. Sorry for the inconvenience.
         </p>
       </div>
