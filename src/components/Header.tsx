@@ -41,7 +41,7 @@ const Header = () => {
 
           {/* GitHub Link */}
           <a
-            href="https://github.com/hevji"
+            href="https://github.com/hevji/xyfen"
             target="_blank"
             rel="noopener noreferrer"
             className="relative p-2.5 rounded-xl text-muted-foreground hover:text-primary transition-all duration-300 hover:bg-secondary/50 group"
