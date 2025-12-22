@@ -1,4 +1,3 @@
-cat <<'README'
 # Xyfen
 
 Xyfen is a project inspired by [cobalt.tools](https://cobalt.tools) that allows you to use `yt-dlp` to download YouTube videos easily.  
