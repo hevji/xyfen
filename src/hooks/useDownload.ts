@@ -34,7 +34,7 @@ export const useDownload = ({ apiUrl }: UseDownloadOptions) => {
     });
   }, []);
 
-  const startDownload = useCallback(async (url: string, quality: string) => {
+  const startDownload = useCallback(async (url: string, quality: string, includeTitle: boolean = true) => {
     const downloadId = `${Date.now()}-${quality}`;
     
     // Initialize download state
@@ -54,7 +54,7 @@ export const useDownload = ({ apiUrl }: UseDownloadOptions) => {
     try {
       // Start SSE connection for progress updates
       const eventSource = new EventSource(
-        `${apiUrl}/api/download/stream?url=${encodeURIComponent(url)}&quality=${encodeURIComponent(quality)}&id=${downloadId}`
+        `${apiUrl}/api/download/stream?url=${encodeURIComponent(url)}&quality=${encodeURIComponent(quality)}&id=${downloadId}&includeTitle=${includeTitle}`
       );
       
       eventSourcesRef.current.set(downloadId, eventSource);
