@@ -11,7 +11,6 @@ import {
 } from "@/lib/firebase";
 
 const LOGIN_ENABLED = true;
-const RECAPTCHA_KEY = "6Leh2TQsAAAAAIe2kn6tQAEEn3SIxFDx7bap68gL"; // replace with your key
 
 interface LoginScreenProps {
   onLoginSuccess: () => void;
@@ -25,7 +24,7 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const { toast } = useToast();
 
-  // Check auth state
+  // Check if user is already logged in
   useEffect(() => {
     const unsubscribe = onAuthStateChanged((user: FirebaseUser | null) => {
       if (user) {
@@ -37,24 +36,9 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
     return unsubscribe;
   }, [onLoginSuccess, toast]);
 
-  // Wait for grecaptcha to load and execute
-  const executeRecaptcha = async (action: string): Promise<string | undefined> => {
-    if (!window.grecaptcha) return undefined;
-
-    // Hide badge by injecting CSS
-    const badge = document.querySelector(".grecaptcha-badge") as HTMLElement | null;
-    if (badge) badge.style.display = "none";
-
-    // Wait until execute function exists
-    while (!window.grecaptcha.execute) {
-      await new Promise((r) => setTimeout(r, 100));
-    }
-
-    return window.grecaptcha.execute(RECAPTCHA_KEY, { action });
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!email.trim() || !password.trim()) {
       toast({ title: "Fill all fields", variant: "destructive" });
       return;
@@ -63,13 +47,8 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
     setIsLoading(true);
 
     try {
-      let recaptchaToken: string | undefined;
-      if (window.grecaptcha) {
-        recaptchaToken = await executeRecaptcha(isRegistering ? "register" : "login");
-      }
-
       if (isRegistering) {
-        const result = await registerWithEmail(email, password, recaptchaToken);
+        const result = await registerWithEmail(email, password);
         toast({ title: "Account Created!", description: `Welcome ${result.user.email}` });
       } else {
         const result = await signInWithEmail(email, password);
@@ -104,10 +83,7 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
       {/* Background effects */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse" />
-        <div
-          className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-accent/20 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "1s" }}
-        />
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-accent/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl" />
       </div>
 
@@ -131,7 +107,7 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
               {isRegistering ? "Create Account" : "Welcome Back"}
             </h1>
             <p className="text-muted-foreground">
-              {isRegistering ? "Register to continue to Xyfen" : "Sign in to continue to Xyfen"}
+              {isRegistering ? "Register to continue" : "Sign in to continue"}
             </p>
           </div>
 
