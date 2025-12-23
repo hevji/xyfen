@@ -19,12 +19,14 @@ interface LoginScreenProps {
 const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [humanVerified, setHumanVerified] = useState(false);
+  const [captchaLoading, setCaptchaLoading] = useState(false);
   const { toast } = useToast();
 
-  // Check if user is already logged in
   useEffect(() => {
     const unsubscribe = onAuthStateChanged((user: FirebaseUser | null) => {
       if (user) {
@@ -39,8 +41,18 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!email.trim() || !password.trim()) {
+    if (!email.trim() || !password.trim() || (isRegistering && !confirmPassword.trim())) {
       toast({ title: "Fill all fields", variant: "destructive" });
+      return;
+    }
+
+    if (isRegistering && password !== confirmPassword) {
+      toast({ title: "Passwords do not match", variant: "destructive" });
+      return;
+    }
+
+    if (isRegistering && !humanVerified) {
+      toast({ title: "Please verify you are human", variant: "destructive" });
       return;
     }
 
@@ -62,6 +74,15 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
     setIsLoading(false);
   };
 
+  const handleCaptchaClick = () => {
+    setCaptchaLoading(true);
+    setTimeout(() => {
+      setCaptchaLoading(false);
+      setHumanVerified(true);
+      toast({ title: "Verified!", description: "You are human now" });
+    }, 1500); // fake 1.5s captcha loading
+  };
+
   if (!LOGIN_ENABLED) {
     onLoginSuccess();
     return null;
@@ -80,17 +101,14 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background overflow-hidden">
-      {/* Background effects */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-accent/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl" />
       </div>
 
-      {/* Login/Register Card */}
       <div className="relative z-10 w-full max-w-md mx-4 animate-fade-in">
         <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl p-8 shadow-2xl shadow-primary/10">
-          {/* Logo */}
           <div className="flex items-center justify-center gap-3 mb-8">
             <div className="relative">
               <Flame className="w-10 h-10 text-primary animate-pulse" />
@@ -101,7 +119,6 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
             </span>
           </div>
 
-          {/* Title */}
           <div className="text-center mb-8">
             <h1 className="text-2xl font-semibold text-foreground mb-2">
               {isRegistering ? "Create Account" : "Welcome Back"}
@@ -111,12 +128,9 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
             </p>
           </div>
 
-          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium text-foreground">
-                Email
-              </label>
+              <label htmlFor="email" className="text-sm font-medium text-foreground">Email</label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
@@ -132,9 +146,7 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium text-foreground">
-                Password
-              </label>
+              <label htmlFor="password" className="text-sm font-medium text-foreground">Password</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
@@ -144,14 +156,46 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="pl-11 h-12 bg-background/50 border-border/50 focus:border-primary focus:ring-primary/20 transition-all duration-300"
-                  autoComplete="current-password"
+                  autoComplete="new-password"
                 />
               </div>
             </div>
 
+            {isRegistering && (
+              <>
+                <div className="space-y-2">
+                  <label htmlFor="confirmPassword" className="text-sm font-medium text-foreground">Confirm Password</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      placeholder="Confirm your password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="pl-11 h-12 bg-background/50 border-border/50 focus:border-primary focus:ring-primary/20 transition-all duration-300"
+                      autoComplete="new-password"
+                    />
+                  </div>
+                </div>
+
+                {/* Fake captcha */}
+                {!humanVerified && (
+                  <Button
+                    type="button"
+                    onClick={handleCaptchaClick}
+                    disabled={captchaLoading}
+                    className="w-full h-12 text-base font-semibold bg-gray-300 text-gray-800 hover:bg-gray-400 transition-all duration-300"
+                  >
+                    {captchaLoading ? "Verifying..." : "I'm not a robot"}
+                  </Button>
+                )}
+              </>
+            )}
+
             <Button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || (isRegistering && !humanVerified)}
               className="w-full h-12 text-base font-semibold bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 shadow-lg shadow-primary/25 transition-all duration-300 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5"
             >
               {isLoading ? (
@@ -167,21 +211,16 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
             </Button>
           </form>
 
-          {/* Toggle Login/Register */}
           <p className="text-center text-sm mt-4">
             {isRegistering ? (
               <>
                 Already have an account?{" "}
-                <button onClick={() => setIsRegistering(false)} className="text-primary underline">
-                  Sign In
-                </button>
+                <button onClick={() => setIsRegistering(false)} className="text-primary underline">Sign In</button>
               </>
             ) : (
               <>
                 Don't have an account?{" "}
-                <button onClick={() => setIsRegistering(true)} className="text-primary underline">
-                  Register
-                </button>
+                <button onClick={() => setIsRegistering(true)} className="text-primary underline">Register</button>
               </>
             )}
           </p>
