@@ -4,34 +4,42 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import WarningModal from "./components/WarningModal";
 import MobileBlockModal from "./components/MobileBlockModal";
 import LoginScreen from "./components/LoginScreen";
+
 import { LOGIN_ENABLED } from "./config/auth";
 import { initializeFirebase } from "./lib/firebase";
 
 const queryClient = new QueryClient();
 
-const App = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    // Check if user was previously authenticated in this session
-    return sessionStorage.getItem("xyfen_authenticated") === "true";
-  });
+// 👇 PUT YOUR SITE KEY HERE
+const RECAPTCHA_SITE_KEY = "6Leh2TQsAAAAAIe2kn6tQAEEn3SIxFDx7bap68gL";
 
-  // Initialize Firebase on app load
+const App = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    sessionStorage.getItem("xyfen_authenticated") === "true"
+  );
+
+  // Initialize Firebase once
   useEffect(() => {
-    // Wait for Firebase CDN to load, then initialize
-    const initFirebase = () => {
-      if (window.firebase) {
-        initializeFirebase();
-      } else {
-        // Retry if CDN not loaded yet
-        setTimeout(initFirebase, 100);
-      }
+    initializeFirebase();
+  }, []);
+
+  // Load reCAPTCHA once
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = `https://www.google.com/recaptcha/enterprise.js?render=${RECAPTCHA_SITE_KEY}`;
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+
+    return () => {
+      document.head.removeChild(script);
     };
-    initFirebase();
   }, []);
 
   const handleLoginSuccess = () => {
@@ -39,7 +47,6 @@ const App = () => {
     setIsAuthenticated(true);
   };
 
-  // Show login screen if enabled and not authenticated
   const showLogin = LOGIN_ENABLED && !isAuthenticated;
 
   return (
@@ -48,6 +55,7 @@ const App = () => {
         <Toaster />
         <Sonner />
         <MobileBlockModal />
+
         {showLogin ? (
           <LoginScreen onLoginSuccess={handleLoginSuccess} />
         ) : (
@@ -56,7 +64,6 @@ const App = () => {
             <BrowserRouter>
               <Routes>
                 <Route path="/" element={<Index />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
