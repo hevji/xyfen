@@ -24,8 +24,8 @@ interface VideoInfo {
   }>;
 }
 
-// API endpoint - change this to your Flask backend URL
-const API_URL = "http://localhost:5000";
+// API endpoint - Xyfen backend
+const API_URL = "https://xyfen-backend.onrender.com";
 
 /**
  * Index Page - Main Xyfen YouTube Downloader Interface
@@ -77,7 +77,7 @@ const Index = () => {
       console.error("Fetch error:", error);
       toast({
         title: "Connection Error",
-        description: "Make sure the Flask backend is running on localhost:5000",
+        description: "Unable to connect to the backend. Please try again later.",
         variant: "destructive",
       });
     } finally {
