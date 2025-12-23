@@ -18,12 +18,12 @@ export const LOGIN_ENABLED = true;
  * Add: localhost, your-app.lovable.app, and any custom domains
  */
 export const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyAwOMlhpq7m7mGND1r7hcPrQY-T1XxtpZ4",
+  authDomain: "xyfen-12af2.firebaseapp.com",
+  projectId: "xyfen-12af2",
+  storageBucket: "xyfen-12af2.firebasestorage.app",
+  messagingSenderId: "549286651712",
+  appId: "1:549286651712:web:c3c84a37b5c62942353ca5"
 };
 
 /**
