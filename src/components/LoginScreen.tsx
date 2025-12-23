@@ -35,7 +35,7 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
     await new Promise((resolve) => setTimeout(resolve, 500));
 
     // Hardcoded login credentials
-    if (username === "Admin" && password === "Admin") {
+    if (username === "brood" && password === "kaas") {
       toast({
         title: "Login Successful",
         description: `Welcome back, ${username}!`,
