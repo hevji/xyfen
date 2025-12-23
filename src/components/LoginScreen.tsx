@@ -11,6 +11,7 @@ import {
 } from "@/lib/firebase";
 
 const LOGIN_ENABLED = true;
+const RECAPTCHA_KEY = "6Leh2TQsAAAAAIe2kn6tQAEEn3SIxFDx7bap68gL"; // replace with your key
 
 interface LoginScreenProps {
   onLoginSuccess: () => void;
@@ -36,6 +37,22 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
     return unsubscribe;
   }, [onLoginSuccess, toast]);
 
+  // Wait for grecaptcha to load and execute
+  const executeRecaptcha = async (action: string): Promise<string | undefined> => {
+    if (!window.grecaptcha) return undefined;
+
+    // Hide badge by injecting CSS
+    const badge = document.querySelector(".grecaptcha-badge") as HTMLElement | null;
+    if (badge) badge.style.display = "none";
+
+    // Wait until execute function exists
+    while (!window.grecaptcha.execute) {
+      await new Promise((r) => setTimeout(r, 100));
+    }
+
+    return window.grecaptcha.execute(RECAPTCHA_KEY, { action });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !password.trim()) {
@@ -46,13 +63,12 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
     setIsLoading(true);
 
     try {
-      if (isRegistering) {
-        // Optional reCAPTCHA
-        let recaptchaToken: string | undefined;
-        if (window.grecaptcha) {
-          recaptchaToken = await window.grecaptcha.execute("YOUR_RECAPTCHA_KEY", { action: "register" });
-        }
+      let recaptchaToken: string | undefined;
+      if (window.grecaptcha) {
+        recaptchaToken = await executeRecaptcha(isRegistering ? "register" : "login");
+      }
 
+      if (isRegistering) {
         const result = await registerWithEmail(email, password, recaptchaToken);
         toast({ title: "Account Created!", description: `Welcome ${result.user.email}` });
       } else {
