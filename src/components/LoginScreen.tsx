@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 
+// Toggle login screen
+const LOGIN_ENABLED = true;
+
 interface LoginScreenProps {
   onLoginSuccess: () => void;
 }
@@ -16,7 +19,7 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!username.trim() || !password.trim()) {
       toast({
         title: "Missing Fields",
@@ -28,12 +31,11 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
 
     setIsLoading(true);
 
-    // Placeholder authentication - replace with real auth logic
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    // Simulate async login
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
-    // For demo purposes, accept any non-empty credentials
-    // TODO: Replace with actual authentication
-    if (username && password) {
+    // Hardcoded login credentials
+    if (username === "Admin" && password === "Admin") {
       toast({
         title: "Login Successful",
         description: `Welcome back, ${username}!`,
@@ -42,13 +44,19 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
     } else {
       toast({
         title: "Login Failed",
-        description: "Invalid username or password.",
+        description: "Incorrect username or password.",
         variant: "destructive",
       });
     }
 
     setIsLoading(false);
   };
+
+  // If login is disabled, skip the login screen
+  if (!LOGIN_ENABLED) {
+    onLoginSuccess();
+    return null;
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background overflow-hidden">
@@ -130,11 +138,6 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
               )}
             </Button>
           </form>
-
-          {/* Footer */}
-          <p className="text-center text-sm text-muted-foreground mt-6">
-            Demo mode: Enter any credentials to continue
-          </p>
         </div>
       </div>
     </div>
