@@ -223,7 +223,7 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
 
           {/* Firebase note */}
           <p className="mt-6 text-xs text-center text-muted-foreground">
-            Powered by Firebase Authentication
+            Secured by Firebase
           </p>
         </div>
       </div>
