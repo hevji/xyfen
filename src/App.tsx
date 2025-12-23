@@ -10,6 +10,7 @@ import WarningModal from "./components/WarningModal";
 import MobileBlockModal from "./components/MobileBlockModal";
 import LoginScreen from "./components/LoginScreen";
 import { LOGIN_ENABLED } from "./config/auth";
+import { initializeFirebase } from "./lib/firebase";
 
 const queryClient = new QueryClient();
 
@@ -18,6 +19,20 @@ const App = () => {
     // Check if user was previously authenticated in this session
     return sessionStorage.getItem("xyfen_authenticated") === "true";
   });
+
+  // Initialize Firebase on app load
+  useEffect(() => {
+    // Wait for Firebase CDN to load, then initialize
+    const initFirebase = () => {
+      if (window.firebase) {
+        initializeFirebase();
+      } else {
+        // Retry if CDN not loaded yet
+        setTimeout(initFirebase, 100);
+      }
+    };
+    initFirebase();
+  }, []);
 
   const handleLoginSuccess = () => {
     sessionStorage.setItem("xyfen_authenticated", "true");
