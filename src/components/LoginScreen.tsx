@@ -1,10 +1,11 @@
-import { useState } from "react";
-import { Flame, Lock, User } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Flame, Lock, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { signInWithEmail, onAuthStateChanged, type FirebaseUser } from "@/lib/firebase";
 
-// Toggle login screen
+// Toggle login screen - imported from config but can be overridden here
 const LOGIN_ENABLED = true;
 
 interface LoginScreenProps {
@@ -12,18 +13,58 @@ interface LoginScreenProps {
 }
 
 const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const { toast } = useToast();
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const checkAuthState = () => {
+      try {
+        const unsubscribe = onAuthStateChanged((user: FirebaseUser | null) => {
+          if (user) {
+            // User is already logged in, skip login screen
+            toast({
+              title: "Welcome Back",
+              description: `Logged in as ${user.email}`,
+            });
+            onLoginSuccess();
+          }
+          setIsCheckingAuth(false);
+        });
+
+        return unsubscribe;
+      } catch (error) {
+        // Firebase not loaded yet, wait a bit
+        setIsCheckingAuth(false);
+      }
+    };
+
+    // Small delay to ensure Firebase CDN is loaded
+    const timer = setTimeout(checkAuthState, 100);
+    return () => clearTimeout(timer);
+  }, [onLoginSuccess, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!username.trim() || !password.trim()) {
+    if (!email.trim() || !password.trim()) {
       toast({
         title: "Missing Fields",
-        description: "Please enter both username and password.",
+        description: "Please enter both email and password.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address.",
         variant: "destructive",
       });
       return;
@@ -31,20 +72,47 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
 
     setIsLoading(true);
 
-    // Simulate async login
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    // Hardcoded login credentials
-    if (username === "brood" && password === "kaas") {
+    try {
+      const result = await signInWithEmail(email, password);
       toast({
         title: "Login Successful",
-        description: `Welcome back, ${username}!`,
+        description: `Welcome back, ${result.user.email}!`,
       });
       onLoginSuccess();
-    } else {
+    } catch (error: unknown) {
+      // Handle Firebase auth errors
+      const firebaseError = error as { code?: string; message?: string };
+      let errorMessage = "An error occurred during login.";
+      
+      switch (firebaseError.code) {
+        case "auth/invalid-email":
+          errorMessage = "Invalid email address format.";
+          break;
+        case "auth/user-disabled":
+          errorMessage = "This account has been disabled.";
+          break;
+        case "auth/user-not-found":
+          errorMessage = "No account found with this email.";
+          break;
+        case "auth/wrong-password":
+          errorMessage = "Incorrect password.";
+          break;
+        case "auth/invalid-credential":
+          errorMessage = "Invalid email or password.";
+          break;
+        case "auth/too-many-requests":
+          errorMessage = "Too many failed attempts. Please try again later.";
+          break;
+        case "auth/network-request-failed":
+          errorMessage = "Network error. Please check your connection.";
+          break;
+        default:
+          errorMessage = firebaseError.message || "Login failed. Please try again.";
+      }
+
       toast({
         title: "Login Failed",
-        description: "Incorrect username or password.",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -56,6 +124,18 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
   if (!LOGIN_ENABLED) {
     onLoginSuccess();
     return null;
+  }
+
+  // Show loading while checking auth state
+  if (isCheckingAuth) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+          <span className="text-muted-foreground">Checking authentication...</span>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -90,18 +170,19 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <label htmlFor="username" className="text-sm font-medium text-foreground">
-                Username
+              <label htmlFor="email" className="text-sm font-medium text-foreground">
+                Email
               </label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
-                  id="username"
-                  type="text"
-                  placeholder="Enter your username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  id="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="pl-11 h-12 bg-background/50 border-border/50 focus:border-primary focus:ring-primary/20 transition-all duration-300"
+                  autoComplete="email"
                 />
               </div>
             </div>
@@ -119,6 +200,7 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="pl-11 h-12 bg-background/50 border-border/50 focus:border-primary focus:ring-primary/20 transition-all duration-300"
+                  autoComplete="current-password"
                 />
               </div>
             </div>
@@ -138,6 +220,11 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
               )}
             </Button>
           </form>
+
+          {/* Firebase note */}
+          <p className="mt-6 text-xs text-center text-muted-foreground">
+            Powered by Firebase Authentication
+          </p>
         </div>
       </div>
     </div>
