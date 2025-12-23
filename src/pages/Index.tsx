@@ -24,8 +24,8 @@ interface VideoInfo {
   }>;
 }
 
-// API endpoint - Xyfen backend
-const API_URL = "https://xyfen-backend.onrender.com";
+// API endpoint - Local backend
+const API_URL = "http://localhost:5000";
 
 /**
  * Index Page - Main Xyfen YouTube Downloader Interface
