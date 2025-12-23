@@ -1,14 +1,53 @@
 import { useState } from "react";
+import { ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 /**
  * TermsModal Component
- * Non-fullscreen modal for Terms of Use
  */
 const TermsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
-  // Replace with your actual terms text
-  const TERMS_TEXT = `Your full Terms of Use go here.
-Line breaks will be preserved.`;
+  const TERMS_TEXT = `Terms of Service
+
+Effective Date: December 23, 2025
+
+Welcome to Xyfen. By accessing or using our website, you agree to comply with and be bound by these Terms of Service (“Terms”). If you do not agree to these Terms, do not use the Service.
+
+1. Use of the Service
+Xyfen provides a tool that allows users to download content from online sources for personal use. You agree to use the Service only for lawful purposes and in compliance with all applicable laws.
+
+2. Intellectual Property and Copyright
+You acknowledge that content available through the Service may be protected by copyright or other intellectual property laws. You agree not to:
+
+-Download content that you do not have the right to access.
+
+-Distribute, repost, sell, or share downloaded content without the permission of the copyright owner.
+
+-Use the Service for any illegal or unauthorized purpose.
+
+-The Service is intended for personal, non-commercial use only. Respect the rights of content creators.
+
+3. Prohibited Conduct
+When using the Service, you agree not to:
+
+-Violate any applicable laws or regulations.
+
+-Upload, post, or distribute any content that infringes on intellectual property rights.
+
+-Use the Service to harass, abuse, or harm others.
+
+-Attempt to interfere with the proper functioning of the Service.
+
+4. Disclaimer
+The Service is provided “as-is” and we make no warranties regarding its availability, accuracy, or legality of downloaded content. You assume all responsibility for your use of the Service and the consequences of your actions.
+
+5. Limitation of Liability
+[Your Website Name] is not liable for any direct, indirect, incidental, or consequential damages arising from your use of the Service, including but not limited to copyright infringement or misuse of downloaded content.
+
+6. Changes to Terms
+We may update these Terms at any time. Continued use of the Service constitutes your acceptance of the revised Terms.
+
+
+For questions or concerns about these Terms, please contact us at tnzruho@gmail.com.`;
 
   return (
     <div
@@ -54,13 +93,27 @@ const Footer: React.FC = () => {
             Built with ❤️ using React & Flask
           </p>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsModalOpen(true)}
-          >
-            Terms of Use
-          </Button>
+          <div className="flex gap-2">
+            {/* MIT License Link */}
+            <a
+              href="https://github.com/hevji/xyfen/blob/main/LICENCE.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-all duration-300 px-4 py-2 rounded-lg hover:bg-secondary/50"
+            >
+              MIT License
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+
+            {/* Terms of Use Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsModalOpen(true)}
+            >
+              Terms of Use
+            </Button>
+          </div>
         </div>
       </footer>
 
