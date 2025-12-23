@@ -1,3 +1,4 @@
+// ... rest of imports
 import { useState, useEffect } from "react";
 import { Flame, Lock, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,8 +24,8 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
   const [isRegistering, setIsRegistering] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-  const [humanVerified, setHumanVerified] = useState(false);
-  const [captchaLoading, setCaptchaLoading] = useState(false);
+  const [agreed, setAgreed] = useState(false);
+  const [termsModalOpen, setTermsModalOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -51,8 +52,8 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
       return;
     }
 
-    if (isRegistering && !humanVerified) {
-      toast({ title: "Please verify you are human", variant: "destructive" });
+    if (isRegistering && !agreed) {
+      toast({ title: "You must agree to the Terms of Service", variant: "destructive" });
       return;
     }
 
@@ -72,15 +73,6 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
     }
 
     setIsLoading(false);
-  };
-
-  const handleCaptchaClick = () => {
-    setCaptchaLoading(true);
-    setTimeout(() => {
-      setCaptchaLoading(false);
-      setHumanVerified(true);
-      toast({ title: "Verified!", description: "You are human now" });
-    }, 1500); // fake 1.5s captcha loading
   };
 
   if (!LOGIN_ENABLED) {
@@ -162,40 +154,49 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
             </div>
 
             {isRegistering && (
-              <>
-                <div className="space-y-2">
-                  <label htmlFor="confirmPassword" className="text-sm font-medium text-foreground">Confirm Password</label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                    <Input
-                      id="confirmPassword"
-                      type="password"
-                      placeholder="Confirm your password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="pl-11 h-12 bg-background/50 border-border/50 focus:border-primary focus:ring-primary/20 transition-all duration-300"
-                      autoComplete="new-password"
-                    />
-                  </div>
+              <div className="space-y-2">
+                <label htmlFor="confirmPassword" className="text-sm font-medium text-foreground">Confirm Password</label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    placeholder="Confirm your password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="pl-11 h-12 bg-background/50 border-border/50 focus:border-primary focus:ring-primary/20 transition-all duration-300"
+                    autoComplete="new-password"
+                  />
                 </div>
+              </div>
+            )}
 
-                {/* Fake captcha */}
-                {!humanVerified && (
-                  <Button
-                    type="button"
-                    onClick={handleCaptchaClick}
-                    disabled={captchaLoading}
-                    className="w-full h-12 text-base font-semibold bg-gray-300 text-gray-800 hover:bg-gray-400 transition-all duration-300"
-                  >
-                    {captchaLoading ? "Verifying..." : "I'm not a robot"}
-                  </Button>
-                )}
-              </>
+            {isRegistering && (
+              <div className="flex flex-col items-start gap-2">
+                <Button
+                  type="button"
+                  onClick={() => setTermsModalOpen(true)}
+                  className="text-sm text-primary underline bg-transparent p-0"
+                >
+                  View Terms of Service
+                </Button>
+
+                <Button
+                  type="button"
+                  onClick={() => setAgreed(true)}
+                  disabled={agreed}
+                  className={`w-full h-12 text-base font-semibold ${
+                    agreed ? "bg-green-400 text-white" : "bg-gray-300 text-gray-800"
+                  } transition-all duration-300`}
+                >
+                  {agreed ? "Agreed ✓" : "I agree to the Terms of Service"}
+                </Button>
+              </div>
             )}
 
             <Button
               type="submit"
-              disabled={isLoading || (isRegistering && !humanVerified)}
+              disabled={isLoading || (isRegistering && !agreed)}
               className="w-full h-12 text-base font-semibold bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 shadow-lg shadow-primary/25 transition-all duration-300 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5"
             >
               {isLoading ? (
@@ -224,6 +225,51 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
               </>
             )}
           </p>
+
+          {/* Terms Modal */}
+          {termsModalOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+              <div className="bg-card p-6 rounded-xl max-w-lg w-full relative">
+                <button
+                  onClick={() => setTermsModalOpen(false)}
+                  className="absolute top-3 right-3 text-gray-500 hover:text-gray-800"
+                >
+                  ✕
+                </button>
+                <h2 className="text-xl font-semibold mb-4">Terms of Service</h2>
+                <div className="max-h-80 overflow-y-auto space-y-2">
+                  <p>Terms of Service</p>
+                  <p>Effective Date: December 23, 2025</p>
+                  <p>Welcome to Xyfen. By accessing or using our website, you agree to comply with and be bound by these Terms of Service (“Terms”). If you do not agree to these Terms, do not use the Service.</p>
+                  <p><strong>1. Use of the Service</strong></p>
+                  <p>Xyfen provides a tool that allows users to download content from online sources for personal use. You agree to use the Service only for lawful purposes and in compliance with all applicable laws.</p>
+                  <p><strong>2. Intellectual Property and Copyright</strong></p>
+                  <p>You acknowledge that content available through the Service may be protected by copyright or other intellectual property laws. You agree not to:</p>
+                  <ul className="pl-4 list-disc">
+                    <li>Download content that you do not have the right to access.</li>
+                    <li>Distribute, repost, sell, or share downloaded content without the permission of the copyright owner.</li>
+                    <li>Use the Service for any illegal or unauthorized purpose.</li>
+                    <li>The Service is intended for personal, non-commercial use only. Respect the rights of content creators.</li>
+                  </ul>
+                  <p><strong>3. Prohibited Conduct</strong></p>
+                  <p>When using the Service, you agree not to:</p>
+                  <ul className="pl-4 list-disc">
+                    <li>Violate any applicable laws or regulations.</li>
+                    <li>Upload, post, or distribute any content that infringes on intellectual property rights.</li>
+                    <li>Use the Service to harass, abuse, or harm others.</li>
+                    <li>Attempt to interfere with the proper functioning of the Service.</li>
+                  </ul>
+                  <p><strong>4. Disclaimer</strong></p>
+                  <p>The Service is provided “as-is” and we make no warranties regarding its availability, accuracy, or legality of downloaded content. You assume all responsibility for your use of the Service and the consequences of your actions.</p>
+                  <p><strong>5. Limitation of Liability</strong></p>
+                  <p>Xyfen is not liable for any direct, indirect, incidental, or consequential damages arising from your use of the Service, including but not limited to copyright infringement or misuse of downloaded content.</p>
+                  <p><strong>6. Changes to Terms</strong></p>
+                  <p>We may update these Terms at any time. Continued use of the Service constitutes your acceptance of the revised Terms.</p>
+                  <p>For questions or concerns about these Terms, please contact us at tnzruho@gmail.com.</p>
+                </div>
+              </div>
+            </div>
+          )}
 
           <p className="mt-6 text-xs text-center text-muted-foreground">Secured by Firebase</p>
         </div>
