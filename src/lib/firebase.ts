@@ -7,9 +7,13 @@ declare global {
       initializeApp: (config: typeof firebaseConfig) => void;
       auth: () => {
         signInWithEmailAndPassword: (email: string, password: string) => Promise<{ user: FirebaseUser }>;
+        createUserWithEmailAndPassword: (email: string, password: string) => Promise<{ user: FirebaseUser }>;
         signOut: () => Promise<void>;
         onAuthStateChanged: (callback: (user: FirebaseUser | null) => void) => () => void;
         currentUser: FirebaseUser | null;
+      };
+      grecaptcha: {
+        execute: (key: string, options?: { action: string }) => Promise<string>;
       };
     };
   }
@@ -28,12 +32,11 @@ let initialized = false;
  */
 export const initializeFirebase = () => {
   if (initialized || !window.firebase) return;
-  
+
   try {
     window.firebase.initializeApp(firebaseConfig);
     initialized = true;
   } catch (error) {
-    // App might already be initialized
     console.log("Firebase already initialized");
   }
 };
@@ -55,6 +58,25 @@ export const getAuth = () => {
 export const signInWithEmail = async (email: string, password: string) => {
   const auth = getAuth();
   return auth.signInWithEmailAndPassword(email, password);
+};
+
+/**
+ * Register user with email and password + optional reCAPTCHA token
+ */
+export const registerWithEmail = async (email: string, password: string, recaptchaToken?: string) => {
+  const auth = getAuth();
+
+  // Optional: send reCAPTCHA token to your backend for verification
+  if (recaptchaToken) {
+    // Example:
+    // await fetch("/api/verify-recaptcha", {
+    //   method: "POST",
+    //   headers: { "Content-Type": "application/json" },
+    //   body: JSON.stringify({ token: recaptchaToken }),
+    // });
+  }
+
+  return auth.createUserWithEmailAndPassword(email, password);
 };
 
 /**
@@ -84,3 +106,4 @@ export const getCurrentUser = (): FirebaseUser | null => {
     return null;
   }
 };
+
