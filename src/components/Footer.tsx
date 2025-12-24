@@ -41,7 +41,7 @@ When using the Service, you agree not to:
 The Service is provided “as-is” and we make no warranties regarding its availability, accuracy, or legality of downloaded content. You assume all responsibility for your use of the Service and the consequences of your actions.
 
 5. Limitation of Liability
-[Your Website Name] is not liable for any direct, indirect, incidental, or consequential damages arising from your use of the Service, including but not limited to copyright infringement or misuse of downloaded content.
+Xyfen is not liable for any direct, indirect, incidental, or consequential damages arising from your use of the Service, including but not limited to copyright infringement or misuse of downloaded content.
 
 6. Changes to Terms
 We may update these Terms at any time. Continued use of the Service constitutes your acceptance of the revised Terms.
