@@ -1,14 +1,244 @@
+# ============================================================
+# robots.txt
+# ============================================================
+# Purpose:
+# Control access for search engines, crawlers, scrapers,
+# AI models, and automated agents.
+#
+# Note:
+# robots.txt is NOT a security mechanism.
+# It only provides instructions to compliant user agents.
+#
+# Last updated: 2025-12-24
+# ============================================================
+
+
+# ------------------------------------------------------------
+# DEFAULT RULES (ALL BOTS)
+# ------------------------------------------------------------
+User-agent: *
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /login/
+Disallow: /register/
+Disallow: /account/
+Disallow: /settings/
+Disallow: /profile/
+Disallow: /private/
+Disallow: /internal/
+Disallow: /tmp/
+Disallow: /temp/
+Disallow: /cache/
+Disallow: /logs/
+Disallow: /debug/
+Disallow: /test/
+Disallow: /dev/
+Disallow: /staging/
+Disallow: /preview/
+Disallow: /beta/
+Disallow: /sandbox/
+Disallow: /api/
+Disallow: /api/*
+Disallow: /graphql
+Disallow: /graphql/*
+Disallow: /*?*
+Disallow: /*&*
+Disallow: /*=
+Disallow: /*.json$
+Disallow: /*.xml$
+Disallow: /*.txt$
+Disallow: /*.log$
+Disallow: /*.sql$
+Disallow: /*.env$
+Disallow: /*.bak$
+Disallow: /*.old$
+
+Allow: /
+Allow: /assets/
+Allow: /assets/*
+Allow: /static/
+Allow: /static/*
+Allow: /public/
+Allow: /public/*
+Allow: /images/
+Allow: /images/*
+Allow: /css/
+Allow: /js/
+
+Crawl-delay: 5
+
+
+# ------------------------------------------------------------
+# GOOGLEBOT (SEARCH)
+# ------------------------------------------------------------
 User-agent: Googlebot
+Disallow: /admin/
+Disallow: /api/
+Disallow: /internal/
+Disallow: /private/
 Allow: /
 
+Crawl-delay: 2
+
+
+# ------------------------------------------------------------
+# GOOGLEBOT IMAGE
+# ------------------------------------------------------------
+User-agent: Googlebot-Image
+Allow: /images/
+Allow: /assets/images/
+Disallow: /private/
+Disallow: /internal/
+
+
+# ------------------------------------------------------------
+# GOOGLEBOT VIDEO
+# ------------------------------------------------------------
+User-agent: Googlebot-Video
+Allow: /videos/
+Disallow: /private/
+Disallow: /internal/
+
+
+# ------------------------------------------------------------
+# BINGBOT
+# ------------------------------------------------------------
 User-agent: Bingbot
+Disallow: /admin/
+Disallow: /api/
+Disallow: /internal/
 Allow: /
 
+Crawl-delay: 5
+
+
+# ------------------------------------------------------------
+# YANDEX
+# ------------------------------------------------------------
+User-agent: Yandex
+Disallow: /
+Crawl-delay: 10
+
+
+# ------------------------------------------------------------
+# BAIDU
+# ------------------------------------------------------------
+User-agent: Baiduspider
+Disallow: /
+
+
+# ------------------------------------------------------------
+# DUCKDUCKGO
+# ------------------------------------------------------------
+User-agent: DuckDuckBot
+Allow: /
+Disallow: /api/
+Disallow: /internal/
+
+
+# ------------------------------------------------------------
+# SOCIAL MEDIA CRAWLERS
+# ------------------------------------------------------------
 User-agent: Twitterbot
 Allow: /
+Disallow: /admin/
+Disallow: /api/
 
 User-agent: facebookexternalhit
 Allow: /
+Disallow: /admin/
+Disallow: /api/
 
-User-agent: *
+User-agent: LinkedInBot
 Allow: /
+Disallow: /admin/
+Disallow: /api/
+
+User-agent: Discordbot
+Allow: /
+Disallow: /private/
+Disallow: /internal/
+
+
+# ------------------------------------------------------------
+# AI / LLM CRAWLERS
+# ------------------------------------------------------------
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: PerplexityBot
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: Applebot-Extended
+Disallow: /
+
+
+# ------------------------------------------------------------
+# AGGRESSIVE SCRAPERS / BAD ACTORS
+# ------------------------------------------------------------
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+User-agent: BLEXBot
+Disallow: /
+
+User-agent: DataForSeoBot
+Disallow: /
+
+User-agent: ZoominfoBot
+Disallow: /
+
+User-agent: PetalBot
+Disallow: /
+
+
+# ------------------------------------------------------------
+# FILE TYPE BLOCKING
+# ------------------------------------------------------------
+User-agent: *
+Disallow: /*.zip$
+Disallow: /*.rar$
+Disallow: /*.7z$
+Disallow: /*.exe$
+Disallow: /*.msi$
+Disallow: /*.dmg$
+Disallow: /*.iso$
+Disallow: /*.apk$
+
+
+# ------------------------------------------------------------
+# SITEMAPS
+# ------------------------------------------------------------
+Sitemap: https://example.com/sitemap.xml
+Sitemap: https://example.com/sitemap-pages.xml
+Sitemap: https://example.com/sitemap-images.xml
+Sitemap: https://example.com/sitemap-videos.xml
+
+
+# ------------------------------------------------------------
+# END OF FILE
+# ------------------------------------------------------------
