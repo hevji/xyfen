@@ -1,11 +1,11 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Sparkles, Shield, Zap, Settings, Flame } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import UrlInput from "@/components/UrlInput";
 import VideoCard from "@/components/VideoCard";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import BackendInstructions from "@/components/BackendInstructions";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useDownload } from "@/hooks/useDownload";
@@ -31,10 +31,10 @@ const API_URL = "http://localhost:5000";
  * Index Page - Main Xyfen YouTube Downloader Interface
  */
 const Index = () => {
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [videoInfo, setVideoInfo] = useState<VideoInfo | null>(null);
   const [currentUrl, setCurrentUrl] = useState("");
-  const [showInstructions, setShowInstructions] = useState(false);
   const { toast } = useToast();
   
   const {
@@ -201,24 +201,17 @@ const Index = () => {
             </section>
           )}
 
-          {/* Backend Setup Toggle */}
+          {/* Backend Setup Link */}
           <section className="text-center animate-fade-in" style={{ animationDelay: "0.7s" }}>
             <Button
               variant="glass"
-              onClick={() => setShowInstructions(!showInstructions)}
+              onClick={() => navigate("/backend-setup")}
               className="gap-2"
             >
               <Settings className="w-4 h-4" />
-              {showInstructions ? "Hide" : "Show"} Backend Setup
+              Backend Setup
             </Button>
           </section>
-
-          {/* Backend Instructions */}
-          {showInstructions && (
-            <section className="mt-10 animate-fade-in">
-              <BackendInstructions />
-            </section>
-          )}
         </div>
       </main>
 
