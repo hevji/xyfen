@@ -3,13 +3,13 @@ import { Flame, Lock, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
 import {
   signInWithEmail,
   registerWithEmail,
   onAuthStateChanged,
   type FirebaseUser,
 } from "@/lib/firebase";
-import { getAuth, sendPasswordResetEmail } from "firebase/auth"; // <-- Added
 
 const LOGIN_ENABLED = true;
 
@@ -25,10 +25,7 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [agreed, setAgreed] = useState(false);
-  const [termsModalOpen, setTermsModalOpen] = useState(false);
   const { toast } = useToast();
-
-  const auth = getAuth(); // Firebase auth instance
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged((user: FirebaseUser | null) => {
@@ -77,20 +74,6 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
     setIsLoading(false);
   };
 
-  // New: handle password reset
-  const handlePasswordReset = async () => {
-    if (!email.trim()) {
-      toast({ title: "Enter your email first", variant: "destructive" });
-      return;
-    }
-    try {
-      await sendPasswordResetEmail(auth, email);
-      toast({ title: "Password reset email sent!", description: "Check your inbox." });
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
-    }
-  };
-
   if (!LOGIN_ENABLED) {
     onLoginSuccess();
     return null;
@@ -120,7 +103,6 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
 
       <div className="relative z-10 w-full max-w-md mx-4 animate-fade-in">
         <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl p-8 shadow-2xl shadow-primary/10">
-          {/* Header */}
           <div className="flex items-center justify-center gap-3 mb-8">
             <div className="relative">
               <Flame className="w-10 h-10 text-primary animate-pulse" />
@@ -141,7 +123,6 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Email */}
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-medium text-foreground">
                 Email
@@ -160,7 +141,6 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
               </div>
             </div>
 
-            {/* Password */}
             <div className="space-y-2">
               <label htmlFor="password" className="text-sm font-medium text-foreground">
                 Password
@@ -177,21 +157,8 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
                   autoComplete="new-password"
                 />
               </div>
-
-              {/* NEW: Forgot password link */}
-              {!isRegistering && (
-                <p className="text-sm text-right mt-1">
-                  <span
-                    className="text-blue-600 underline cursor-pointer"
-                    onClick={handlePasswordReset}
-                  >
-                    Forgot Password?
-                  </span>
-                </p>
-              )}
             </div>
 
-            {/* Confirm Password (Register) */}
             {isRegistering && (
               <div className="space-y-2">
                 <label htmlFor="confirmPassword" className="text-sm font-medium text-foreground">
@@ -212,7 +179,6 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
               </div>
             )}
 
-            {/* Terms */}
             {isRegistering && (
               <div className="flex items-center gap-2 text-sm text-foreground">
                 <input
@@ -223,13 +189,13 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
                 />
                 <span>
                   I agree to the{" "}
-                  <button
-                    type="button"
-                    onClick={() => setTermsModalOpen(true)}
-                    className="underline text-primary"
+                  <Link
+                    to="/terms-of-service"
+                    target="_blank"
+                    className="underline text-primary hover:text-primary/80"
                   >
                     Terms of Service
-                  </button>
+                  </Link>
                 </span>
               </div>
             )}
@@ -252,7 +218,6 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
             </Button>
           </form>
 
-          {/* Bottom toggle */}
           <p className="text-center text-sm mt-4">
             {isRegistering ? (
               <>
@@ -270,13 +235,6 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
               </>
             )}
           </p>
-
-          {/* Terms modal & footer remain unchanged */}
-          {termsModalOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-              {/* ... */}
-            </div>
-          )}
 
           <p className="mt-6 text-xs text-center text-muted-foreground">Secured by Firebase</p>
         </div>
