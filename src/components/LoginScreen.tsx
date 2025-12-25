@@ -11,8 +11,6 @@ import {
   type FirebaseUser,
 } from "@/lib/firebase";
 
-const LOGIN_ENABLED = true;
-
 interface LoginScreenProps {
   onLoginSuccess: () => void;
 }
@@ -73,11 +71,6 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
 
     setIsLoading(false);
   };
-
-  if (!LOGIN_ENABLED) {
-    onLoginSuccess();
-    return null;
-  }
 
   if (isCheckingAuth) {
     return (
@@ -202,19 +195,16 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
 
             <Button
               type="submit"
-              disabled={isLoading || (isRegistering && !agreed)}
+              disabled={isLoading}
               className="w-full h-12 text-base font-semibold bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 shadow-lg shadow-primary/25 transition-all duration-300 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5"
             >
-              {isLoading ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                  <span>{isRegistering ? "Registering..." : "Signing in..."}</span>
-                </div>
-              ) : isRegistering ? (
-                "Register"
-              ) : (
-                "Sign In"
-              )}
+              {isLoading
+                ? isRegistering
+                  ? "Registering..."
+                  : "Signing in..."
+                : isRegistering
+                ? "Register"
+                : "Sign In"}
             </Button>
           </form>
 
