@@ -1,4 +1,4 @@
-import { firebaseConfig } from "@/config/auth";
+import { firebaseConfig, isFirebaseConfigured } from "@/config/auth";
 
 // Extend Window interface for Firebase globals from CDN
 declare global {
@@ -32,6 +32,11 @@ let initialized = false;
  */
 export const initializeFirebase = () => {
   if (initialized || !window.firebase) return;
+
+  if (!isFirebaseConfigured()) {
+    console.warn("Firebase is not configured. Please set environment variables.");
+    return;
+  }
 
   try {
     window.firebase.initializeApp(firebaseConfig);
