@@ -66,10 +66,10 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
       }
       onLoginSuccess();
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({ title: "Error", description: err?.message || "Something went wrong", variant: "destructive" });
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   };
 
   if (isCheckingAuth) {
@@ -85,6 +85,7 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background overflow-hidden">
+      {/* Background blobs */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse" />
         <div
@@ -94,8 +95,10 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl" />
       </div>
 
-      <div className="relative z-10 w-full max-w-md mx-4 animate-fade-in">
+      {/* Main form */}
+      <div className="relative z-20 w-full max-w-md mx-4 animate-fade-in">
         <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl p-8 shadow-2xl shadow-primary/10">
+          {/* Header */}
           <div className="flex items-center justify-center gap-3 mb-8">
             <div className="relative">
               <Flame className="w-10 h-10 text-primary animate-pulse" />
@@ -116,6 +119,7 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Email */}
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-medium text-foreground">
                 Email
@@ -134,6 +138,7 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
               </div>
             </div>
 
+            {/* Password */}
             <div className="space-y-2">
               <label htmlFor="password" className="text-sm font-medium text-foreground">
                 Password
@@ -152,47 +157,49 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
               </div>
             </div>
 
+            {/* Register-only fields */}
             {isRegistering && (
-              <div className="space-y-2">
-                <label htmlFor="confirmPassword" className="text-sm font-medium text-foreground">
-                  Confirm Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    placeholder="Confirm your password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="pl-11 h-12 bg-background/50 border-border/50 focus:border-primary focus:ring-primary/20 transition-all duration-300"
-                    autoComplete="new-password"
-                  />
+              <>
+                <div className="space-y-2">
+                  <label htmlFor="confirmPassword" className="text-sm font-medium text-foreground">
+                    Confirm Password
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      placeholder="Confirm your password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="pl-11 h-12 bg-background/50 border-border/50 focus:border-primary focus:ring-primary/20 transition-all duration-300"
+                      autoComplete="new-password"
+                    />
+                  </div>
                 </div>
-              </div>
+
+                <div className="flex items-center gap-2 text-sm text-foreground">
+                  <input
+                    type="checkbox"
+                    checked={agreed}
+                    onChange={(e) => setAgreed(e.target.checked)}
+                    className="w-4 h-4 accent-primary"
+                  />
+                  <span>
+                    I agree to the{" "}
+                    <Link
+                      to="/terms-of-service"
+                      target="_blank"
+                      className="underline text-primary hover:text-primary/80"
+                    >
+                      Terms of Service
+                    </Link>
+                  </span>
+                </div>
+              </>
             )}
 
-            {isRegistering && (
-              <div className="flex items-center gap-2 text-sm text-foreground">
-                <input
-                  type="checkbox"
-                  checked={agreed}
-                  onChange={(e) => setAgreed(e.target.checked)}
-                  className="w-4 h-4 accent-primary"
-                />
-                <span>
-                  I agree to the{" "}
-                  <Link
-                    to="/terms-of-service"
-                    target="_blank"
-                    className="underline text-primary hover:text-primary/80"
-                  >
-                    Terms of Service
-                  </Link>
-                </span>
-              </div>
-            )}
-
+            {/* Submit button */}
             <Button
               type="submit"
               disabled={isLoading}
@@ -208,18 +215,27 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
             </Button>
           </form>
 
+          {/* Toggle between Login/Register */}
           <p className="text-center text-sm mt-4">
             {isRegistering ? (
               <>
                 Already have an account?{" "}
-                <button onClick={() => setIsRegistering(false)} className="text-primary underline">
+                <button
+                  type="button"
+                  onClick={() => setIsRegistering(false)}
+                  className="text-primary underline"
+                >
                   Sign In
                 </button>
               </>
             ) : (
               <>
                 Don't have an account?{" "}
-                <button onClick={() => setIsRegistering(true)} className="text-primary underline">
+                <button
+                  type="button"
+                  onClick={() => setIsRegistering(true)}
+                  className="text-primary underline"
+                >
                   Register
                 </button>
               </>
