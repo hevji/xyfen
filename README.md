@@ -9,7 +9,6 @@ It has a clean, modern interface and lets you pick video resolution and optional
 - Select resolution before downloading
 - Optionally include the video title in the filename
 - Desktop-friendly interface with smooth animations
-- Clear error messages for YouTube Premium videos
 
 ## Backend
 
