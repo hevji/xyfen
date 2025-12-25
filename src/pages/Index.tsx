@@ -1,109 +1,50 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Sparkles, Shield, Zap, Settings, Flame } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import UrlInput from "@/components/UrlInput";
-import VideoCard from "@/components/VideoCard";
-import LoadingSpinner from "@/components/LoadingSpinner";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useDownload } from "@/hooks/useDownload";
 
-// Video metadata interface
-interface VideoInfo {
-  title: string;
-  thumbnail: string;
-  duration: string;
-  views: string;
-  channel: string;
-  formats: Array<{
-    quality: string;
-    format: string;
-    size: string;
-  }>;
-}
-
-// API endpoint - Local backend
-const API_URL = "http://localhost:5000";
+/**
+ * Extract YouTube video ID from various URL formats
+ */
+const extractVideoId = (url: string): string | null => {
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([^&\n?#]+)/,
+    /^([a-zA-Z0-9_-]{11})$/,
+  ];
+  
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) return match[1];
+  }
+  return null;
+};
 
 /**
  * Index Page - Main Xyfen YouTube Downloader Interface
  */
 const Index = () => {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
-  const [videoInfo, setVideoInfo] = useState<VideoInfo | null>(null);
-  const [currentUrl, setCurrentUrl] = useState("");
   const { toast } = useToast();
-  
-  const {
-    downloads,
-    startDownload,
-    downloadFile,
-    retryDownload,
-    getActiveDownload,
-  } = useDownload({ apiUrl: API_URL });
 
   /**
-   * Fetch video information from the backend
+   * Handle URL submission - extract video ID and navigate to download page
    */
-  const handleFetchVideo = async (url: string) => {
-    setIsLoading(true);
-    setVideoInfo(null);
-    setCurrentUrl(url);
-
-    try {
-      const response = await fetch(`${API_URL}/api/fetch`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ url }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to fetch video info");
-      }
-
-      const data = await response.json();
-      setVideoInfo(data);
+  const handleFetchVideo = (url: string) => {
+    const videoId = extractVideoId(url);
+    
+    if (!videoId) {
       toast({
-        title: "Video found!",
-        description: "Select a quality to download.",
-      });
-    } catch (error) {
-      console.error("Fetch error:", error);
-      toast({
-        title: "Connection Error",
-        description: "Unable to connect to the backend. Please try again later.",
+        title: "Invalid URL",
+        description: "Please enter a valid YouTube URL.",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
+      return;
     }
-  };
-
-  /**
-   * Handle video download request
-   */
-  const handleDownload = (quality: string, includeTitle: boolean): string => {
-    toast({
-      title: "Download Started",
-      description: `Starting ${quality} download...`,
-    });
     
-    const downloadId = `${Date.now()}-${quality}`;
-    startDownload(currentUrl, quality, includeTitle);
-    return downloadId;
-  };
-
-  /**
-   * Handle retry for failed downloads
-   */
-  const handleRetry = (downloadId: string) => {
-    retryDownload(downloadId, currentUrl);
+    navigate(`/download?videoId=${videoId}`);
   };
 
   return (
@@ -144,62 +85,39 @@ const Index = () => {
 
           {/* URL Input Section */}
           <section className="mb-14 animate-fade-in" style={{ animationDelay: "0.3s" }}>
-            <UrlInput onSubmit={handleFetchVideo} isLoading={isLoading} />
+            <UrlInput onSubmit={handleFetchVideo} isLoading={false} />
           </section>
 
-          {/* Loading State */}
-          {isLoading && (
-            <section className="mb-14">
-              <LoadingSpinner />
-            </section>
-          )}
-
-          {/* Video Info Display */}
-          {videoInfo && !isLoading && (
-            <section className="mb-14">
-              <VideoCard
-                video={videoInfo}
-                onDownload={handleDownload}
-                downloads={downloads}
-                onDownloadFile={downloadFile}
-                onRetry={handleRetry}
-                getActiveDownload={getActiveDownload}
-              />
-            </section>
-          )}
-
           {/* Features Grid */}
-          {!videoInfo && !isLoading && (
-            <section className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-14">
-              <div className="glass rounded-2xl p-7 text-center space-y-4 animate-fade-in interactive-card" style={{ animationDelay: "0.4s" }}>
-                <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/10 flex items-center justify-center mx-auto">
-                  <Zap className="w-7 h-7 text-primary" />
-                </div>
-                <h3 className="font-display font-semibold text-lg">Lightning Fast</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">
-                  Fetch video info in seconds with optimized processing
-                </p>
+          <section className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-14">
+            <div className="glass rounded-2xl p-7 text-center space-y-4 animate-fade-in interactive-card" style={{ animationDelay: "0.4s" }}>
+              <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/10 flex items-center justify-center mx-auto">
+                <Zap className="w-7 h-7 text-primary" />
               </div>
-              <div className="glass rounded-2xl p-7 text-center space-y-4 animate-fade-in interactive-card" style={{ animationDelay: "0.5s" }}>
-                <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/10 flex items-center justify-center mx-auto">
-                  <Shield className="w-7 h-7 text-primary" />
-                </div>
-                <h3 className="font-display font-semibold text-lg">Safe & Secure</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">
-                  No data collection, runs entirely on your machine
-                </p>
+              <h3 className="font-display font-semibold text-lg">Lightning Fast</h3>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                Fetch video info in seconds with optimized processing
+              </p>
+            </div>
+            <div className="glass rounded-2xl p-7 text-center space-y-4 animate-fade-in interactive-card" style={{ animationDelay: "0.5s" }}>
+              <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/10 flex items-center justify-center mx-auto">
+                <Shield className="w-7 h-7 text-primary" />
               </div>
-              <div className="glass rounded-2xl p-7 text-center space-y-4 animate-fade-in interactive-card" style={{ animationDelay: "0.6s" }}>
-                <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/10 flex items-center justify-center mx-auto">
-                  <Sparkles className="w-7 h-7 text-primary" />
-                </div>
-                <h3 className="font-display font-semibold text-lg">Multiple Formats</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">
-                  Download in 360p to 4K, audio-only, and more
-                </p>
+              <h3 className="font-display font-semibold text-lg">Safe & Secure</h3>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                No data collection, runs entirely on your machine
+              </p>
+            </div>
+            <div className="glass rounded-2xl p-7 text-center space-y-4 animate-fade-in interactive-card" style={{ animationDelay: "0.6s" }}>
+              <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/10 flex items-center justify-center mx-auto">
+                <Sparkles className="w-7 h-7 text-primary" />
               </div>
-            </section>
-          )}
+              <h3 className="font-display font-semibold text-lg">Multiple Formats</h3>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                Download in 360p to 4K, audio-only, and more
+              </p>
+            </div>
+          </section>
 
           {/* Backend Setup Link */}
           <section className="text-center animate-fade-in" style={{ animationDelay: "0.7s" }}>
