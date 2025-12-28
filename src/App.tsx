@@ -23,12 +23,19 @@ import { initializeFirebase } from "./lib/firebase";
 const queryClient = new QueryClient();
 
 const App = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    // Check session first, then localStorage for incognito fallback
+    return (
+      sessionStorage.getItem("xyfen_authenticated") === "true" ||
+      localStorage.getItem("xyfen_authenticated") === "true"
+    );
+  });
+
   const [showLogin, setShowLogin] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
   const [analyticsAccepted, setAnalyticsAccepted] = useState(false);
 
-  // Initialize Firebase and check authentication
+  // Initialize Firebase
   useEffect(() => {
     const initFirebase = () => {
       if (window.firebase) {
@@ -39,19 +46,15 @@ const App = () => {
     };
     initFirebase();
 
-    // Check session/localStorage for authentication
-    const auth = sessionStorage.getItem("xyfen_authenticated") || localStorage.getItem("xyfen_authenticated");
-    if (auth === "true") {
-      setIsAuthenticated(true);
-    } else if (LOGIN_ENABLED) {
+    if (!isAuthenticated && LOGIN_ENABLED) {
       setShowLogin(true);
     }
-  }, []);
+  }, [isAuthenticated]);
 
-  // Initialize GA only after consent
+  // Initialize GA after consent
   useEffect(() => {
     if (analyticsAccepted) {
-      ReactGA.initialize("G-L0SXBVTSSB"); // replace with your GA4 ID
+      ReactGA.initialize("G-XXXXXXXXXX"); // replace with your GA4 ID
       ReactGA.send({ hitType: "pageview", page: window.location.pathname });
     }
   }, [analyticsAccepted]);
@@ -77,18 +80,34 @@ const App = () => {
         <Sonner />
         <MobileBlockModal />
 
-        {/* Analytics modal overlays site */}
+        {/* Analytics notice overlay in bottom-right */}
         <AnalyticsModal onAccept={() => setAnalyticsAccepted(true)} />
 
-        {/* Show login/register modals if not authenticated */}
+        {/* Login/Register modals as centered overlay */}
         {!isAuthenticated && LOGIN_ENABLED && (
           <>
-            {showLogin && <LoginScreen onLoginSuccess={handleLoginSuccess} />}
-            {showRegister && <RegisterScreen onRegisterSuccess={handleRegisterSuccess} />}
+            {showLogin && (
+              <LoginScreen
+                onLoginSuccess={handleLoginSuccess}
+                onSwitchToRegister={() => {
+                  setShowLogin(false);
+                  setShowRegister(true);
+                }}
+              />
+            )}
+            {showRegister && (
+              <RegisterScreen
+                onRegisterSuccess={handleRegisterSuccess}
+                onSwitchToLogin={() => {
+                  setShowRegister(false);
+                  setShowLogin(true);
+                }}
+              />
+            )}
           </>
         )}
 
-        {/* Main website always rendered */}
+        {/* Main website always visible */}
         <WarningModal />
         <BrowserRouter>
           <Routes>
