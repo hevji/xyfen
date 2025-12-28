@@ -1,16 +1,27 @@
-import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import RegisterScreen from "@/components/RegisterScreen";
 
 const Register = () => {
   const navigate = useNavigate();
 
-  useEffect(() => {
-    localStorage.setItem("xyfen_open_register", "true");
-    navigate("/");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const handleRegisterSuccess = () => {
+    sessionStorage.setItem("xyfen_authenticated", "true");
+    localStorage.setItem("xyfen_authenticated", "true");
+    window.location.href = "/";
+  };
 
-  return null;
+  const handleSwitchToLogin = () => {
+    navigate("/login");
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <RegisterScreen
+        onRegisterSuccess={handleRegisterSuccess}
+        onSwitchToLogin={handleSwitchToLogin}
+      />
+    </div>
+  );
 };
 
 export default Register;

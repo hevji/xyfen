@@ -12,9 +12,10 @@ import {
 
 interface RegisterScreenProps {
   onRegisterSuccess: () => void;
+  onSwitchToLogin?: () => void;
 }
 
-const RegisterScreen = ({ onRegisterSuccess }: RegisterScreenProps) => {
+const RegisterScreen = ({ onRegisterSuccess, onSwitchToLogin }: RegisterScreenProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -202,9 +203,15 @@ const RegisterScreen = ({ onRegisterSuccess }: RegisterScreenProps) => {
 
           <p className="text-center text-sm mt-4">
             Already have an account?{" "}
-            <Link to="/login" className="text-primary underline">
-              Sign In
-            </Link>
+            {onSwitchToLogin ? (
+              <button onClick={onSwitchToLogin} className="text-primary underline">
+                Sign In
+              </button>
+            ) : (
+              <Link to="/login" className="text-primary underline">
+                Sign In
+              </Link>
+            )}
           </p>
 
           {/* Terms Modal */}
