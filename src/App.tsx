@@ -28,7 +28,7 @@ const App = () => {
   const [showRegister, setShowRegister] = useState(false);
   const [analyticsAccepted, setAnalyticsAccepted] = useState(false);
 
-  // Initialize Firebase
+  // Initialize Firebase and check authentication
   useEffect(() => {
     const initFirebase = () => {
       if (window.firebase) {
@@ -41,14 +41,17 @@ const App = () => {
 
     // Check session/localStorage for authentication
     const auth = sessionStorage.getItem("xyfen_authenticated") || localStorage.getItem("xyfen_authenticated");
-    if (auth === "true") setIsAuthenticated(true);
-    else if (LOGIN_ENABLED) setShowLogin(true);
+    if (auth === "true") {
+      setIsAuthenticated(true);
+    } else if (LOGIN_ENABLED) {
+      setShowLogin(true);
+    }
   }, []);
 
   // Initialize GA only after consent
   useEffect(() => {
     if (analyticsAccepted) {
-      ReactGA.initialize("G-XXXXXXXXXX"); // replace with your GA4 ID
+      ReactGA.initialize("G-L0SXBVTSSB"); // replace with your GA4 ID
       ReactGA.send({ hitType: "pageview", page: window.location.pathname });
     }
   }, [analyticsAccepted]);
@@ -73,8 +76,11 @@ const App = () => {
         <Toaster />
         <Sonner />
         <MobileBlockModal />
+
+        {/* Analytics modal overlays site */}
         <AnalyticsModal onAccept={() => setAnalyticsAccepted(true)} />
 
+        {/* Show login/register modals if not authenticated */}
         {!isAuthenticated && LOGIN_ENABLED && (
           <>
             {showLogin && <LoginScreen onLoginSuccess={handleLoginSuccess} />}
@@ -82,20 +88,17 @@ const App = () => {
           </>
         )}
 
-        {isAuthenticated && analyticsAccepted && (
-          <>
-            <WarningModal />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/download" element={<Download />} />
-                <Route path="/backend-setup" element={<BackendSetup />} />
-                <Route path="/terms-of-service" element={<TermsOfService />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-          </>
-        )}
+        {/* Main website always rendered */}
+        <WarningModal />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/download" element={<Download />} />
+            <Route path="/backend-setup" element={<BackendSetup />} />
+            <Route path="/terms-of-service" element={<TermsOfService />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
   );
