@@ -9,6 +9,7 @@ import Download from "./pages/Download";
 import BackendSetup from "./pages/BackendSetup";
 import TermsOfService from "./pages/TermsOfService";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
 import WarningModal from "./components/WarningModal";
 import MobileBlockModal from "./components/MobileBlockModal";
@@ -59,6 +60,7 @@ const App = () => {
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
                 <Route path="/download" element={<Download />} />
                 <Route path="/backend-setup" element={<BackendSetup />} />
                 <Route path="/terms-of-service" element={<TermsOfService />} />
