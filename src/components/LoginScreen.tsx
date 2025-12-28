@@ -12,9 +12,10 @@ import {
 
 interface LoginScreenProps {
   onLoginSuccess: () => void;
+  onSwitchToRegister?: () => void;
 }
 
-const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
+const LoginScreen = ({ onLoginSuccess, onSwitchToRegister }: LoginScreenProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -53,107 +54,100 @@ const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
     setIsLoading(false);
   };
 
-  if (isCheckingAuth) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
-          <span className="text-muted-foreground">Checking authentication...</span>
-        </div>
-      </div>
-    );
-  }
-
+  // Renders as a centered card that does NOT block background interaction.
+  // We rely on App.tsx wrapper to enforce pointer-events behavior, but keep this component safe too.
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background overflow-hidden">
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse" />
-        <div
-          className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-accent/20 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "1s" }}
-        />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl" />
-      </div>
+    <div className="w-full max-w-md mx-auto">
+      <div className="bg-card/90 backdrop-blur-xl border border-border/50 rounded-2xl p-6 shadow-2xl">
+        <div className="flex items-center justify-center gap-3 mb-6">
+          <div className="relative">
+            <Flame className="w-9 h-9 text-primary animate-pulse" />
+            <div className="absolute inset-0 w-9 h-9 bg-primary/30 blur-xl rounded-full" />
+          </div>
+          <span className="text-2xl font-display font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
+            Xyfen
+          </span>
+        </div>
 
-      <div className="relative z-10 w-full max-w-md mx-4 animate-fade-in">
-        <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl p-8 shadow-2xl shadow-primary/10">
-          <div className="flex items-center justify-center gap-3 mb-8">
-            <div className="relative">
-              <Flame className="w-10 h-10 text-primary animate-pulse" />
-              <div className="absolute inset-0 w-10 h-10 bg-primary/30 blur-xl rounded-full" />
+        <div className="text-center mb-4">
+          <h1 className="text-xl font-semibold text-foreground mb-1">Welcome Back</h1>
+          <p className="text-sm text-muted-foreground">Sign in to continue</p>
+        </div>
+
+        {isCheckingAuth && (
+          <div className="flex items-center gap-3 mb-4 text-xs text-muted-foreground">
+            <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+            <span>Checking authentication...</span>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="email" className="text-sm font-medium text-foreground">
+              Email
+            </label>
+            <div className="relative mt-1">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                id="email"
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="pl-10 h-11 bg-background/50 border-border/50 focus:border-primary focus:ring-primary/20 transition-all duration-300"
+                autoComplete="email"
+              />
             </div>
-            <span className="text-3xl font-display font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
-              Xyfen
-            </span>
           </div>
 
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-semibold text-foreground mb-2">Welcome Back</h1>
-            <p className="text-muted-foreground">Sign in to continue</p>
+          <div>
+            <label htmlFor="password" className="text-sm font-medium text-foreground">
+              Password
+            </label>
+            <div className="relative mt-1">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                id="password"
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="pl-10 h-11 bg-background/50 border-border/50 focus:border-primary focus:ring-primary/20 transition-all duration-300"
+                autoComplete="current-password"
+              />
+            </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium text-foreground">
-                Email
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-11 h-12 bg-background/50 border-border/50 focus:border-primary focus:ring-primary/20 transition-all duration-300"
-                  autoComplete="email"
-                />
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="w-full h-11 text-sm font-semibold bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 shadow"
+          >
+            {isLoading ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                <span>Signing in...</span>
               </div>
-            </div>
+            ) : (
+              "Sign In"
+            )}
+          </Button>
+        </form>
 
-            <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium text-foreground">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-11 h-12 bg-background/50 border-border/50 focus:border-primary focus:ring-primary/20 transition-all duration-300"
-                  autoComplete="current-password"
-                />
-              </div>
-            </div>
-
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="w-full h-12 text-base font-semibold bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 shadow-lg shadow-primary/25 transition-all duration-300 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5"
-            >
-              {isLoading ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                  <span>Signing in...</span>
-                </div>
-              ) : (
-                "Sign In"
-              )}
-            </Button>
-          </form>
-
-          <p className="text-center text-sm mt-4">
-            Don't have an account?{" "}
+        <p className="text-center text-sm mt-4">
+          Don't have an account?{" "}
+          {onSwitchToRegister ? (
+            <button onClick={onSwitchToRegister} className="text-primary underline">
+              Register
+            </button>
+          ) : (
             <Link to="/register" className="text-primary underline">
               Register
             </Link>
-          </p>
+          )}
+        </p>
 
-          <p className="mt-6 text-xs text-center text-muted-foreground">Secured by Firebase</p>
-        </div>
+        <p className="mt-4 text-xs text-center text-muted-foreground">Secured by Firebase</p>
       </div>
     </div>
   );
