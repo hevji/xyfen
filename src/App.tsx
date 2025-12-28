@@ -24,7 +24,7 @@ const queryClient = new QueryClient();
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    // Check session first, then localStorage for incognito fallback
+    // sessionStorage first, then localStorage fallback
     return (
       sessionStorage.getItem("xyfen_authenticated") === "true" ||
       localStorage.getItem("xyfen_authenticated") === "true"
@@ -35,7 +35,7 @@ const App = () => {
   const [showRegister, setShowRegister] = useState(false);
   const [analyticsAccepted, setAnalyticsAccepted] = useState(false);
 
-  // Initialize Firebase
+  // Initialize Firebase and check any "open modal" flags set by /login or /register pages
   useEffect(() => {
     const initFirebase = () => {
       if (window.firebase) {
@@ -46,15 +46,27 @@ const App = () => {
     };
     initFirebase();
 
-    if (!isAuthenticated && LOGIN_ENABLED) {
+    // If a route requested opening the modal, honor it and clear the flag
+    const openLogin = localStorage.getItem("xyfen_open_login");
+    const openRegister = localStorage.getItem("xyfen_open_register");
+    if (openLogin === "true") {
+      localStorage.removeItem("xyfen_open_login");
+      setShowLogin(true);
+    } else if (openRegister === "true") {
+      localStorage.removeItem("xyfen_open_register");
+      setShowRegister(true);
+    } else if (!isAuthenticated && LOGIN_ENABLED) {
+      // default behavior: show login modal if auth required and not authed
       setShowLogin(true);
     }
-  }, [isAuthenticated]);
+    // NOTE: dependency intentionally empty — only run on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Initialize GA after consent
   useEffect(() => {
     if (analyticsAccepted) {
-      ReactGA.initialize("G-XXXXXXXXXX"); // replace with your GA4 ID
+      ReactGA.initialize("G-XXXXXXXXXX"); // <-- replace with your GA4 ID
       ReactGA.send({ hitType: "pageview", page: window.location.pathname });
     }
   }, [analyticsAccepted]);
@@ -64,6 +76,7 @@ const App = () => {
     localStorage.setItem("xyfen_authenticated", "true");
     setIsAuthenticated(true);
     setShowLogin(false);
+    setShowRegister(false);
   };
 
   const handleRegisterSuccess = () => {
@@ -71,6 +84,7 @@ const App = () => {
     localStorage.setItem("xyfen_authenticated", "true");
     setIsAuthenticated(true);
     setShowRegister(false);
+    setShowLogin(false);
   };
 
   return (
@@ -80,29 +94,40 @@ const App = () => {
         <Sonner />
         <MobileBlockModal />
 
-        {/* Analytics notice overlay in bottom-right */}
+        {/* Analytics notice overlay in bottom-right (non-blocking) */}
         <AnalyticsModal onAccept={() => setAnalyticsAccepted(true)} />
 
-        {/* Login/Register modals as centered overlay */}
+        {/* Login/Register modals are rendered by App only.
+            Wrapping with a pointer-events wrapper forces non-blocking background interaction
+            even if the internal component tries to use full-screen styles. */}
         {!isAuthenticated && LOGIN_ENABLED && (
           <>
             {showLogin && (
-              <LoginScreen
-                onLoginSuccess={handleLoginSuccess}
-                onSwitchToRegister={() => {
-                  setShowLogin(false);
-                  setShowRegister(true);
-                }}
-              />
+              <div className="fixed inset-0 z-50 pointer-events-none">
+                <div className="pointer-events-auto flex items-center justify-center min-h-screen px-4">
+                  <LoginScreen
+                    onLoginSuccess={handleLoginSuccess}
+                    onSwitchToRegister={() => {
+                      setShowLogin(false);
+                      setShowRegister(true);
+                    }}
+                  />
+                </div>
+              </div>
             )}
+
             {showRegister && (
-              <RegisterScreen
-                onRegisterSuccess={handleRegisterSuccess}
-                onSwitchToLogin={() => {
-                  setShowRegister(false);
-                  setShowLogin(true);
-                }}
-              />
+              <div className="fixed inset-0 z-50 pointer-events-none">
+                <div className="pointer-events-auto flex items-center justify-center min-h-screen px-4">
+                  <RegisterScreen
+                    onRegisterSuccess={handleRegisterSuccess}
+                    onSwitchToLogin={() => {
+                      setShowRegister(false);
+                      setShowLogin(true);
+                    }}
+                  />
+                </div>
+              </div>
             )}
           </>
         )}
@@ -115,6 +140,9 @@ const App = () => {
             <Route path="/download" element={<Download />} />
             <Route path="/backend-setup" element={<BackendSetup />} />
             <Route path="/terms-of-service" element={<TermsOfService />} />
+            {/* keep /login and /register routes — they simply toggle the modal via localStorage and navigate home */}
+            <Route path="/login" element={<></>} />
+            <Route path="/register" element={<></>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
