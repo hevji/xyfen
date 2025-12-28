@@ -18,16 +18,17 @@ const AnalyticsModal = ({ onAccept }: { onAccept: () => void }) => {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-[9999]">
-      <div className="glass p-6 rounded-xl max-w-md mx-auto text-center">
-        <h2 className="text-lg font-semibold mb-4">Analytics Notice</h2>
-        <p className="mb-6 text-sm">
-          This website uses Google Analytics to analyze traffic. By clicking "Okay," you consent to analytics tracking.
-        </p>
-        <Button onClick={handleAccept} className="bg-gradient-to-r from-orange-500 to-orange-400 text-white">
-          Okay
-        </Button>
-      </div>
+    <div className="fixed bottom-4 right-4 z-[9999] w-80 bg-card/90 backdrop-blur-xl border border-border/50 rounded-xl p-4 shadow-lg flex flex-col gap-3">
+      <h3 className="text-sm font-semibold text-foreground">Analytics Notice</h3>
+      <p className="text-xs text-muted-foreground">
+        This website uses Google Analytics to analyze traffic. Click "Okay" to consent.
+      </p>
+      <Button
+        onClick={handleAccept}
+        className="self-end bg-gradient-to-r from-primary to-accent text-white text-sm"
+      >
+        Okay
+      </Button>
     </div>
   );
 };
