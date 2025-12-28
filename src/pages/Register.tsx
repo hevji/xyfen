@@ -1,15 +1,16 @@
-import RegisterScreen from "@/components/RegisterScreen";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 const Register = () => {
   const navigate = useNavigate();
 
-  const handleRegisterSuccess = () => {
-    sessionStorage.setItem("xyfen_authenticated", "true");
+  useEffect(() => {
+    localStorage.setItem("xyfen_open_register", "true");
     navigate("/");
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  return <RegisterScreen onRegisterSuccess={handleRegisterSuccess} />;
+  return null;
 };
 
 export default Register;
