@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
 
 const AnalyticsModal = ({ onAccept }: { onAccept: () => void }) => {
   const [isVisible, setIsVisible] = useState(false);
@@ -23,12 +24,9 @@ const AnalyticsModal = ({ onAccept }: { onAccept: () => void }) => {
         <p className="mb-6 text-sm">
           This website uses Google Analytics to analyze traffic. By clicking "Okay," you consent to analytics tracking.
         </p>
-        <button
-          className="px-6 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-400 text-white hover:opacity-90 transition"
-          onClick={handleAccept}
-        >
+        <Button onClick={handleAccept} className="bg-gradient-to-r from-orange-500 to-orange-400 text-white">
           Okay
-        </button>
+        </Button>
       </div>
     </div>
   );
