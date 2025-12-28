@@ -66,7 +66,7 @@ const App = () => {
   // Initialize GA after consent
   useEffect(() => {
     if (analyticsAccepted) {
-      ReactGA.initialize("G-XXXXXXXXXX"); // <-- replace with your GA4 ID
+      ReactGA.initialize("G-L0SXBVTSSB"); // <-- replace with your GA4 ID
       ReactGA.send({ hitType: "pageview", page: window.location.pathname });
     }
   }, [analyticsAccepted]);
