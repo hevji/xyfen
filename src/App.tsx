@@ -10,12 +10,11 @@ import Index from "./pages/Index";
 import Download from "./pages/Download";
 import BackendSetup from "./pages/BackendSetup";
 import TermsOfService from "./pages/TermsOfService";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
 import WarningModal from "./components/WarningModal";
 import MobileBlockModal from "./components/MobileBlockModal";
 import LoginScreen from "./components/LoginScreen";
+import RegisterScreen from "./components/RegisterScreen";
 import AnalyticsModal from "./components/AnalyticsModal";
 
 import { LOGIN_ENABLED } from "./config/auth";
@@ -24,9 +23,9 @@ import { initializeFirebase } from "./lib/firebase";
 const queryClient = new QueryClient();
 
 const App = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return sessionStorage.getItem("xyfen_authenticated") === "true";
-  });
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+  const [showRegister, setShowRegister] = useState(false);
   const [analyticsAccepted, setAnalyticsAccepted] = useState(false);
 
   // Initialize Firebase
@@ -39,9 +38,14 @@ const App = () => {
       }
     };
     initFirebase();
+
+    // Check session/localStorage for authentication
+    const auth = sessionStorage.getItem("xyfen_authenticated") || localStorage.getItem("xyfen_authenticated");
+    if (auth === "true") setIsAuthenticated(true);
+    else if (LOGIN_ENABLED) setShowLogin(true);
   }, []);
 
-  // Initialize GA only if user accepts
+  // Initialize GA only after consent
   useEffect(() => {
     if (analyticsAccepted) {
       ReactGA.initialize("G-XXXXXXXXXX"); // replace with your GA4 ID
@@ -49,14 +53,19 @@ const App = () => {
     }
   }, [analyticsAccepted]);
 
-  // Called when login/register succeeds
   const handleLoginSuccess = () => {
     sessionStorage.setItem("xyfen_authenticated", "true");
+    localStorage.setItem("xyfen_authenticated", "true");
     setIsAuthenticated(true);
+    setShowLogin(false);
   };
 
-  // Show login screen if enabled and not authenticated
-  const showLogin = LOGIN_ENABLED && !isAuthenticated;
+  const handleRegisterSuccess = () => {
+    sessionStorage.setItem("xyfen_authenticated", "true");
+    localStorage.setItem("xyfen_authenticated", "true");
+    setIsAuthenticated(true);
+    setShowRegister(false);
+  };
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -65,26 +74,26 @@ const App = () => {
         <Sonner />
         <MobileBlockModal />
         <AnalyticsModal onAccept={() => setAnalyticsAccepted(true)} />
-        {analyticsAccepted && (
+
+        {!isAuthenticated && LOGIN_ENABLED && (
           <>
-            {showLogin ? (
-              <LoginScreen onLoginSuccess={handleLoginSuccess} />
-            ) : (
-              <>
-                <WarningModal />
-                <BrowserRouter>
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/register" element={<Register />} />
-                    <Route path="/download" element={<Download />} />
-                    <Route path="/backend-setup" element={<BackendSetup />} />
-                    <Route path="/terms-of-service" element={<TermsOfService />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </BrowserRouter>
-              </>
-            )}
+            {showLogin && <LoginScreen onLoginSuccess={handleLoginSuccess} />}
+            {showRegister && <RegisterScreen onRegisterSuccess={handleRegisterSuccess} />}
+          </>
+        )}
+
+        {isAuthenticated && analyticsAccepted && (
+          <>
+            <WarningModal />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/download" element={<Download />} />
+                <Route path="/backend-setup" element={<BackendSetup />} />
+                <Route path="/terms-of-service" element={<TermsOfService />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
           </>
         )}
       </TooltipProvider>
