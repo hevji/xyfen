@@ -1,129 +1,57 @@
-import { firebaseConfig, isFirebaseConfigured } from "@/config/auth";
+import { useState } from "react";
+import { registerWithEmail, sendVerificationEmail } from "@/lib/firebase";
 
-// Extend Window interface for Firebase globals from CDN
-declare global {
-  interface Window {
-    firebase: {
-      initializeApp: (config: typeof firebaseConfig) => void;
-      auth: () => {
-        signInWithEmailAndPassword: (email: string, password: string) => Promise<{ user: FirebaseUser }>;
-        createUserWithEmailAndPassword: (email: string, password: string) => Promise<{ user: FirebaseUser }>;
-        signOut: () => Promise<void>;
-        onAuthStateChanged: (callback: (user: FirebaseUser | null) => void) => () => void;
-        currentUser: FirebaseUser | null;
-      };
-      grecaptcha: {
-        execute: (key: string, options?: { action: string }) => Promise<string>;
-      };
-    };
-  }
-}
+const SignUpModal = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [verificationSent, setVerificationSent] = useState(false);
+  const [error, setError] = useState("");
 
-export interface FirebaseUser {
-  uid: string;
-  email: string | null;
-  displayName: string | null;
-}
+  const handleSignUp = async () => {
+    setError("");
+    try {
+      // Register the user
+      await registerWithEmail(email, password);
 
-let initialized = false;
+      // Send verification email
+      await sendVerificationEmail();
 
-/**
- * Check if Firebase is ready to use
- */
-export const isFirebaseReady = (): boolean => {
-  return initialized && !!window.firebase;
+      // Show verification message
+      setVerificationSent(true);
+    } catch (err: any) {
+      // Firebase errors
+      setError(err.message || "Something went wrong. Please try again.");
+    }
+  };
+
+  return (
+    <div className="modal">
+      {!verificationSent ? (
+        <div className="modal-content">
+          <h2>Sign Up</h2>
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <button onClick={handleSignUp}>Sign Up</button>
+          {error && <p className="error">{error}</p>}
+        </div>
+      ) : (
+        <div className="modal-content">
+          <h2>Check Your Email</h2>
+          <p>Verification email has been sent. Please check your inbox to verify your email address.</p>
+        </div>
+      )}
+    </div>
+  );
 };
 
-/**
- * Initialize Firebase app (only once)
- */
-export const initializeFirebase = (): boolean => {
-  if (initialized) return true;
-  if (!window.firebase) return false;
-
-  if (!isFirebaseConfigured()) {
-    console.warn("Firebase is not configured. Please set environment variables.");
-    return false;
-  }
-
-  try {
-    window.firebase.initializeApp(firebaseConfig);
-    initialized = true;
-    return true;
-  } catch (error) {
-    console.log("Firebase already initialized");
-    initialized = true;
-    return true;
-  }
-};
-
-/**
- * Get Firebase Auth instance (safe version)
- */
-export const getAuth = () => {
-  if (!window.firebase) {
-    return null;
-  }
-  if (!initialized) {
-    initializeFirebase();
-  }
-  return window.firebase.auth();
-};
-
-/**
- * Sign in with email and password
- */
-export const signInWithEmail = async (email: string, password: string) => {
-  const auth = getAuth();
-  if (!auth) {
-    throw new Error("Firebase is not available. Please try again.");
-  }
-  return auth.signInWithEmailAndPassword(email, password);
-};
-
-/**
- * Register user with email and password
- */
-export const registerWithEmail = async (email: string, password: string) => {
-  const auth = getAuth();
-  if (!auth) {
-    throw new Error("Firebase is not available. Please try again.");
-  }
-  return auth.createUserWithEmailAndPassword(email, password);
-};
-
-/**
- * Sign out current user
- */
-export const signOut = async () => {
-  const auth = getAuth();
-  if (!auth) {
-    throw new Error("Firebase is not available.");
-  }
-  return auth.signOut();
-};
-
-/**
- * Subscribe to auth state changes (safe version)
- */
-export const onAuthStateChanged = (callback: (user: FirebaseUser | null) => void) => {
-  const auth = getAuth();
-  if (!auth) {
-    // Return a no-op unsubscribe function if Firebase isn't ready
-    callback(null);
-    return () => {};
-  }
-  return auth.onAuthStateChanged(callback);
-};
-
-/**
- * Get current user
- */
-export const getCurrentUser = (): FirebaseUser | null => {
-  try {
-    const auth = getAuth();
-    return auth?.currentUser || null;
-  } catch {
-    return null;
-  }
-};
+export default SignUpModal;
