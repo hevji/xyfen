@@ -1,27 +1,22 @@
+// src/lib/firebase.ts
 import { initializeApp, getApps } from "firebase/app";
 import { getAuth, onAuthStateChanged as fbOnAuthStateChanged, signInWithEmailAndPassword, User } from "firebase/auth";
 import { firebaseConfig, isFirebaseConfigured } from "./auth";
 
-let auth: ReturnType<typeof getAuth> | null = null;
+if (!isFirebaseConfigured()) throw new Error("Firebase not configured");
 
-// Initialize Firebase immediately if not already initialized
-export const initializeFirebase = () => {
-  if (!isFirebaseConfigured()) throw new Error("Firebase not configured");
-  if (!getApps().length) initializeApp(firebaseConfig);
-  if (!auth) auth = getAuth();
-};
+// Initialize app only once
+if (!getApps().length) initializeApp(firebaseConfig);
 
-// Listen for auth state changes
+const auth = getAuth();
+
+// Auth helpers
 export const onAuthStateChanged = (callback: (user: User | null) => void) => {
-  if (!auth) throw new Error("Firebase not initialized. Call initializeFirebase first.");
   return fbOnAuthStateChanged(auth, callback);
 };
 
-// Sign in with email/password
-export const signInWithEmail = async (email: string, password: string) => {
-  if (!auth) throw new Error("Firebase not initialized. Call initializeFirebase first.");
-  return await signInWithEmailAndPassword(auth, password);
+export const signInWithEmail = (email: string, password: string) => {
+  return signInWithEmailAndPassword(auth, password);
 };
 
-// Get current user synchronously
-export const getCurrentUser = (): User | null => auth?.currentUser || null;
+export const getCurrentUser = (): User | null => auth.currentUser || null;
