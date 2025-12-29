@@ -3,77 +3,55 @@ import { Flame, Lock, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { initializeFirebase, signInWithEmail, onAuthStateChanged } from "@/lib/firebase";
 import { isLoginSubdomain } from "@/lib/auth";
+import { signInWithEmail, onAuthStateChanged, getCurrentUser } from "@/lib/firebase";
 
 interface LoginScreenProps {
   onLoginSuccess: () => void;
-  onSwitchToRegister?: () => void;
 }
 
-const LoginScreen = ({ onLoginSuccess, onSwitchToRegister }: LoginScreenProps) => {
+const LoginScreen = ({ onLoginSuccess }: LoginScreenProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-  const [firebaseLoaded, setFirebaseLoaded] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const { toast } = useToast();
 
   const loginSubdomain = isLoginSubdomain();
 
-  // Initialize Firebase
   useEffect(() => {
-    const checkFirebase = () => {
-      if (window.firebase) {
-        initializeFirebase();
-        setFirebaseLoaded(true);
-      } else {
-        setTimeout(checkFirebase, 100);
-      }
-    };
-    checkFirebase();
-  }, []);
-
-  // Auto-redirect if already logged in
-  useEffect(() => {
-    if (!firebaseLoaded) return;
-
     const unsubscribe = onAuthStateChanged((user) => {
       if (user) {
-        if (!loginSubdomain) {
-          window.location.href = "https://app.example.com"; // redirect to main app
-        } else {
-          toast({ title: "Welcome Back", description: `Logged in as ${user.email}` });
-          onLoginSuccess();
-        }
+        toast({ title: "Welcome Back", description: `Logged in as ${user.email}` });
+        onLoginSuccess();
+        window.location.href = "https://app.example.com"; // redirect after login
       }
-      setIsCheckingAuth(false);
+      setCheckingAuth(false);
     });
 
     return unsubscribe;
-  }, [firebaseLoaded, loginSubdomain, onLoginSuccess, toast]);
+  }, [onLoginSuccess, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim() || !password.trim()) {
+    if (!email || !password) {
       toast({ title: "Fill all fields", variant: "destructive" });
       return;
     }
 
-    setIsLoading(true);
+    setLoading(true);
     try {
       const result = await signInWithEmail(email, password);
       toast({ title: "Login Successful", description: `Welcome back ${result.user.email}` });
       window.location.href = "https://app.example.com"; // redirect after login
     } catch (err: any) {
-      const message = err.code === "auth/invalid-credential" ? "Invalid email or password" : err.message;
-      toast({ title: "Login Failed", description: message, variant: "destructive" });
+      toast({ title: "Login Failed", description: err.message, variant: "destructive" });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  if (!firebaseLoaded || isCheckingAuth) {
+  if (checkingAuth) {
     return (
       <div className="flex items-center justify-center h-screen text-muted-foreground">
         <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin mr-2" />
@@ -82,10 +60,42 @@ const LoginScreen = ({ onLoginSuccess, onSwitchToRegister }: LoginScreenProps) =
     );
   }
 
-  // The rest of your LoginScreen JSX stays the same (inputs, buttons, modal styling)
   return (
     <div className="w-full max-w-md mx-auto">
-      {/* ...Your modal JSX here, identical to your previous LoginScreen */}
+      <div className="bg-card/90 backdrop-blur-xl border border-border/50 rounded-2xl p-6 shadow-2xl">
+        {/* Logo */}
+        <div className="flex items-center justify-center gap-3 mb-6">
+          <div className="relative">
+            <Flame className="w-9 h-9 text-primary animate-pulse" />
+            <div className="absolute inset-0 w-9 h-9 bg-primary/30 blur-xl rounded-full" />
+          </div>
+          <span className="text-2xl font-display font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
+            Xyfen
+          </span>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label>Email</label>
+            <div className="relative mt-1">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input value={email} onChange={(e) => setEmail(e.target.value)} className="pl-10 h-11" />
+            </div>
+          </div>
+
+          <div>
+            <label>Password</label>
+            <div className="relative mt-1">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="pl-10 h-11" />
+            </div>
+          </div>
+
+          <Button type="submit" disabled={loading} className="w-full h-11">
+            {loading ? "Signing in..." : "Sign In"}
+          </Button>
+        </form>
+      </div>
     </div>
   );
 };
