@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { registerWithEmail, sendVerificationEmail } from "@/lib/firebase";
+import { registerWithEmail, getAuth } from "@/lib/firebase";
 
 const SignUpModal = () => {
   const [email, setEmail] = useState("");
@@ -13,13 +13,31 @@ const SignUpModal = () => {
       // Register the user
       await registerWithEmail(email, password);
 
+      // Wait until currentUser is available
+      const auth = getAuth();
+      let user = auth?.currentUser;
+      let attempts = 0;
+
+      while (!user && attempts < 10) { // retry up to ~1 second
+        await new Promise((r) => setTimeout(r, 100));
+        user = auth?.currentUser;
+        attempts++;
+      }
+
+      if (!user) {
+        throw new Error("User not found after registration. Please try logging in.");
+      }
+
       // Send verification email
-      await sendVerificationEmail();
+      if (user.sendEmailVerification) {
+        await user.sendEmailVerification();
+      } else {
+        throw new Error("sendEmailVerification not available on this user.");
+      }
 
       // Show verification message
       setVerificationSent(true);
     } catch (err: any) {
-      // Firebase errors
       setError(err.message || "Something went wrong. Please try again.");
     }
   };
@@ -47,7 +65,10 @@ const SignUpModal = () => {
       ) : (
         <div className="modal-content">
           <h2>Check Your Email</h2>
-          <p>Verification email has been sent. Please check your inbox to verify your email address.</p>
+          <p>
+            Verification email has been sent. Please check your inbox to verify your email address.
+          </p>
+          <p>If you don’t see it, check your spam folder.</p>
         </div>
       )}
     </div>
