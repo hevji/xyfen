@@ -1,361 +1,151 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from "react";
+import { Flame, Lock, Mail } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  AuthError,
-} from 'firebase/auth';
-import { auth } from '../config/firebase';
-import '../styles/LoginScreen.css';
+  signInWithEmail,
+  onAuthStateChanged,
+  type FirebaseUser,
+} from "@/lib/firebase";
 
-interface FirebaseErrorResponse extends AuthError {
-  code: string;
-  message: string;
+interface LoginScreenProps {
+  onLoginSuccess: () => void;
+  onSwitchToRegister?: () => void;
 }
 
-interface LoginFormData {
-  email: string;
-  password: string;
-}
+const LoginScreen = ({ onLoginSuccess, onSwitchToRegister }: LoginScreenProps) => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const { toast } = useToast();
 
-interface RegisterFormData {
-  email: string;
-  password: string;
-  confirmPassword: string;
-}
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged((user: FirebaseUser | null) => {
+      if (user) {
+        toast({ title: "Welcome Back", description: `Logged in as ${user.email}` });
+        onLoginSuccess();
+      }
+      setIsCheckingAuth(false);
+    });
+    return unsubscribe;
+  }, [onLoginSuccess, toast]);
 
-const LoginScreen: React.FC = () => {
-  // Login form state
-  const [loginForm, setLoginForm] = useState<LoginFormData>({
-    email: '',
-    password: '',
-  });
-
-  // Register form state
-  const [registerForm, setRegisterForm] = useState<RegisterFormData>({
-    email: '',
-    password: '',
-    confirmPassword: '',
-  });
-
-  // UI state
-  const [showRegisterModal, setShowRegisterModal] = useState(false);
-  const [loginError, setLoginError] = useState('');
-  const [registerError, setRegisterError] = useState('');
-  const [isLoginLoading, setIsLoginLoading] = useState(false);
-  const [isRegisterLoading, setIsRegisterLoading] = useState(false);
-  const [loginSuccess, setLoginSuccess] = useState(false);
-
-  // Firebase error message mapping
-  const getFirebaseErrorMessage = (errorCode: string): string => {
-    const errorMessages: { [key: string]: string } = {
-      'auth/invalid-email': 'Invalid email address format',
-      'auth/user-disabled': 'This user account has been disabled',
-      'auth/user-not-found': 'No account found with this email',
-      'auth/wrong-password': 'Incorrect password',
-      'auth/too-many-requests': 'Too many login attempts. Please try again later',
-      'auth/email-already-in-use': 'An account with this email already exists',
-      'auth/weak-password': 'Password should be at least 6 characters',
-      'auth/operation-not-allowed': 'Email/password accounts are not enabled',
-      'auth/invalid-credential': 'Invalid email or password',
-      'auth/network-request-failed': 'Network error. Please check your connection',
-    };
-
-    return errorMessages[errorCode] || 'An error occurred. Please try again';
-  };
-
-  // Login form handlers
-  const handleLoginInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setLoginForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-    setLoginError('');
-  };
-
-  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoginError('');
-    setLoginSuccess(false);
 
-    // Validation
-    if (!loginForm.email || !loginForm.password) {
-      setLoginError('Please fill in all fields');
+    if (!email.trim() || !password.trim()) {
+      toast({ title: "Fill all fields", variant: "destructive" });
       return;
     }
 
-    setIsLoginLoading(true);
+    setIsLoading(true);
 
     try {
-      await signInWithEmailAndPassword(auth, loginForm.email, loginForm.password);
-      setLoginSuccess(true);
-      setLoginForm({ email: '', password: '' });
-      // You can add navigation logic here after successful login
-      console.log('Login successful');
-    } catch (error) {
-      const firebaseError = error as FirebaseErrorResponse;
-      const errorMessage = getFirebaseErrorMessage(firebaseError.code);
-      setLoginError(errorMessage);
-    } finally {
-      setIsLoginLoading(false);
-    }
-  };
-
-  // Register form handlers
-  const handleRegisterInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setRegisterForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-    setRegisterError('');
-  };
-
-  const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setRegisterError('');
-
-    // Validation
-    if (!registerForm.email || !registerForm.password || !registerForm.confirmPassword) {
-      setRegisterError('Please fill in all fields');
-      return;
+      const result = await signInWithEmail(email, password);
+      toast({ title: "Login Successful", description: `Welcome back ${result.user.email}` });
+      onLoginSuccess();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
     }
 
-    if (registerForm.password.length < 6) {
-      setRegisterError('Password must be at least 6 characters');
-      return;
-    }
-
-    if (registerForm.password !== registerForm.confirmPassword) {
-      setRegisterError('Passwords do not match');
-      return;
-    }
-
-    setIsRegisterLoading(true);
-
-    try {
-      await createUserWithEmailAndPassword(
-        auth,
-        registerForm.email,
-        registerForm.password
-      );
-      setRegisterForm({ email: '', password: '', confirmPassword: '' });
-      setShowRegisterModal(false);
-      setLoginSuccess(true);
-      // Auto-fill email in login form
-      setLoginForm((prev) => ({
-        ...prev,
-        email: registerForm.email,
-      }));
-      // You can add navigation logic here after successful registration
-      console.log('Registration successful');
-    } catch (error) {
-      const firebaseError = error as FirebaseErrorResponse;
-      const errorMessage = getFirebaseErrorMessage(firebaseError.code);
-      setRegisterError(errorMessage);
-    } finally {
-      setIsRegisterLoading(false);
-    }
-  };
-
-  const closeRegisterModal = () => {
-    setShowRegisterModal(false);
-    setRegisterForm({ email: '', password: '', confirmPassword: '' });
-    setRegisterError('');
+    setIsLoading(false);
   };
 
   return (
-    <div className="login-screen-container">
-      <div className="login-card">
-        <div className="login-header">
-          <h1>Welcome to Xyfen</h1>
-          <p>Sign in to your account</p>
+    <div className="w-full max-w-md mx-auto">
+      <div className="bg-card/90 backdrop-blur-xl border border-border/50 rounded-2xl p-6 shadow-2xl">
+        <div className="flex items-center justify-center gap-3 mb-6">
+          <div className="relative">
+            <Flame className="w-9 h-9 text-primary animate-pulse" />
+            <div className="absolute inset-0 w-9 h-9 bg-primary/30 blur-xl rounded-full" />
+          </div>
+          <span className="text-2xl font-display font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
+            Xyfen
+          </span>
         </div>
 
-        {/* Success Message */}
-        {loginSuccess && (
-          <div className="success-message">
-            <span className="success-icon">✓</span>
-            Authentication successful! Redirecting...
+        <div className="text-center mb-4">
+          <h1 className="text-xl font-semibold text-foreground mb-1">Welcome Back</h1>
+          <p className="text-sm text-muted-foreground">Sign in to continue</p>
+        </div>
+
+        {isCheckingAuth && (
+          <div className="flex items-center gap-3 mb-4 text-xs text-muted-foreground">
+            <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+            <span>Checking authentication...</span>
           </div>
         )}
 
-        {/* Login Form */}
-        <form onSubmit={handleLogin} className="login-form">
-          <div className="form-group">
-            <label htmlFor="email">Email Address</label>
-            <input
-              id="email"
-              type="email"
-              name="email"
-              value={loginForm.email}
-              onChange={handleLoginInputChange}
-              placeholder="Enter your email"
-              disabled={isLoginLoading}
-              className={loginError ? 'input-error' : ''}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              id="password"
-              type="password"
-              name="password"
-              value={loginForm.password}
-              onChange={handleLoginInputChange}
-              placeholder="Enter your password"
-              disabled={isLoginLoading}
-              className={loginError ? 'input-error' : ''}
-              required
-            />
-          </div>
-
-          {/* Error Message */}
-          {loginError && (
-            <div className="error-message">
-              <span className="error-icon">!</span>
-              {loginError}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="email" className="text-sm font-medium text-foreground">
+              Email
+            </label>
+            <div className="relative mt-1">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                id="email"
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="pl-10 h-11 bg-background/50 border-border/50 focus:border-primary focus:ring-primary/20 transition-all duration-300"
+                autoComplete="email"
+              />
             </div>
-          )}
+          </div>
 
-          <button
+          <div>
+            <label htmlFor="password" className="text-sm font-medium text-foreground">
+              Password
+            </label>
+            <div className="relative mt-1">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                id="password"
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="pl-10 h-11 bg-background/50 border-border/50 focus:border-primary focus:ring-primary/20 transition-all duration-300"
+                autoComplete="current-password"
+              />
+            </div>
+          </div>
+
+          <Button
             type="submit"
-            className="login-button"
-            disabled={isLoginLoading}
+            disabled={isLoading}
+            className="w-full h-11 text-sm font-semibold bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 shadow"
           >
-            {isLoginLoading ? (
-              <>
-                <span className="spinner"></span>
-                Signing in...
-              </>
+            {isLoading ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                <span>Signing in...</span>
+              </div>
             ) : (
-              'Sign In'
+              "Sign In"
             )}
-          </button>
+          </Button>
         </form>
 
-        {/* Register Button */}
-        <div className="register-section">
-          <p>
-            Don't have an account?{' '}
-            <button
-              type="button"
-              className="register-link-button"
-              onClick={() => setShowRegisterModal(true)}
-              disabled={isLoginLoading}
-            >
-              Register here
+        <p className="text-center text-sm mt-4">
+          Don't have an account?{" "}
+          {onSwitchToRegister ? (
+            <button onClick={onSwitchToRegister} className="text-primary underline">
+              Register
             </button>
-          </p>
-        </div>
+          ) : (
+            <a href="/register" className="text-primary underline">
+              Register
+            </a>
+          )}
+        </p>
 
-        {/* Forgot Password Link (Optional) */}
-        <div className="forgot-password-section">
-          <button type="button" className="forgot-password-link">
-            Forgot password?
-          </button>
-        </div>
+        <p className="mt-4 text-xs text-center text-muted-foreground">Secured by Firebase</p>
       </div>
-
-      {/* Register Modal */}
-      {showRegisterModal && (
-        <div className="modal-overlay" onClick={closeRegisterModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Create Account</h2>
-              <button
-                type="button"
-                className="close-button"
-                onClick={closeRegisterModal}
-                aria-label="Close registration modal"
-              >
-                ×
-              </button>
-            </div>
-
-            <form onSubmit={handleRegister} className="register-form">
-              <div className="form-group">
-                <label htmlFor="register-email">Email Address</label>
-                <input
-                  id="register-email"
-                  type="email"
-                  name="email"
-                  value={registerForm.email}
-                  onChange={handleRegisterInputChange}
-                  placeholder="Enter your email"
-                  disabled={isRegisterLoading}
-                  className={registerError ? 'input-error' : ''}
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="register-password">Password</label>
-                <input
-                  id="register-password"
-                  type="password"
-                  name="password"
-                  value={registerForm.password}
-                  onChange={handleRegisterInputChange}
-                  placeholder="Create a password (min 6 characters)"
-                  disabled={isRegisterLoading}
-                  className={registerError ? 'input-error' : ''}
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="confirm-password">Confirm Password</label>
-                <input
-                  id="confirm-password"
-                  type="password"
-                  name="confirmPassword"
-                  value={registerForm.confirmPassword}
-                  onChange={handleRegisterInputChange}
-                  placeholder="Confirm your password"
-                  disabled={isRegisterLoading}
-                  className={registerError ? 'input-error' : ''}
-                  required
-                />
-              </div>
-
-              {/* Error Message */}
-              {registerError && (
-                <div className="error-message">
-                  <span className="error-icon">!</span>
-                  {registerError}
-                </div>
-              )}
-
-              <button
-                type="submit"
-                className="register-button"
-                disabled={isRegisterLoading}
-              >
-                {isRegisterLoading ? (
-                  <>
-                    <span className="spinner"></span>
-                    Creating account...
-                  </>
-                ) : (
-                  'Create Account'
-                )}
-              </button>
-
-              <button
-                type="button"
-                className="cancel-button"
-                onClick={closeRegisterModal}
-                disabled={isRegisterLoading}
-              >
-                Cancel
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
