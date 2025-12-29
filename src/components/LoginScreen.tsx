@@ -6,6 +6,8 @@ import { useToast } from "@/hooks/use-toast";
 import {
   signInWithEmail,
   onAuthStateChanged,
+  isFirebaseReady,
+  initializeFirebase,
   type FirebaseUser,
 } from "@/lib/firebase";
 
@@ -19,9 +21,26 @@ const LoginScreen = ({ onLoginSuccess, onSwitchToRegister }: LoginScreenProps) =
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [firebaseLoaded, setFirebaseLoaded] = useState(false);
   const { toast } = useToast();
 
+  // Wait for Firebase to load
   useEffect(() => {
+    const checkFirebase = () => {
+      if (window.firebase) {
+        initializeFirebase();
+        setFirebaseLoaded(true);
+      } else {
+        setTimeout(checkFirebase, 100);
+      }
+    };
+    checkFirebase();
+  }, []);
+
+  // Check auth state after Firebase loads
+  useEffect(() => {
+    if (!firebaseLoaded) return;
+
     const unsubscribe = onAuthStateChanged((user: FirebaseUser | null) => {
       if (user) {
         toast({ title: "Welcome Back", description: `Logged in as ${user.email}` });
@@ -30,7 +49,7 @@ const LoginScreen = ({ onLoginSuccess, onSwitchToRegister }: LoginScreenProps) =
       setIsCheckingAuth(false);
     });
     return unsubscribe;
-  }, [onLoginSuccess, toast]);
+  }, [firebaseLoaded, onLoginSuccess, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,7 +66,10 @@ const LoginScreen = ({ onLoginSuccess, onSwitchToRegister }: LoginScreenProps) =
       toast({ title: "Login Successful", description: `Welcome back ${result.user.email}` });
       onLoginSuccess();
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      const message = err.code === "auth/invalid-credential" 
+        ? "Invalid email or password" 
+        : err.message;
+      toast({ title: "Login Failed", description: message, variant: "destructive" });
     }
 
     setIsLoading(false);
@@ -71,10 +93,10 @@ const LoginScreen = ({ onLoginSuccess, onSwitchToRegister }: LoginScreenProps) =
           <p className="text-sm text-muted-foreground">Sign in to continue</p>
         </div>
 
-        {isCheckingAuth && (
+        {(isCheckingAuth || !firebaseLoaded) && (
           <div className="flex items-center gap-3 mb-4 text-xs text-muted-foreground">
             <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-            <span>Checking authentication...</span>
+            <span>Loading...</span>
           </div>
         )}
 
@@ -117,7 +139,7 @@ const LoginScreen = ({ onLoginSuccess, onSwitchToRegister }: LoginScreenProps) =
 
           <Button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || !firebaseLoaded}
             className="w-full h-11 text-sm font-semibold bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 shadow"
           >
             {isLoading ? (
@@ -134,11 +156,11 @@ const LoginScreen = ({ onLoginSuccess, onSwitchToRegister }: LoginScreenProps) =
         <p className="text-center text-sm mt-4">
           Don't have an account?{" "}
           {onSwitchToRegister ? (
-            <button onClick={onSwitchToRegister} className="text-primary underline">
+            <button onClick={onSwitchToRegister} className="text-primary underline hover:text-primary/80">
               Register
             </button>
           ) : (
-            <a href="/register" className="text-primary underline">
+            <a href="/register" className="text-primary underline hover:text-primary/80">
               Register
             </a>
           )}

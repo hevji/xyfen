@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import ReactGA from "react-ga4";
 
 import Index from "./pages/Index";
@@ -13,19 +13,23 @@ import TermsOfService from "./pages/TermsOfService";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Auth from "./pages/Auth";
 import WarningModal from "./components/WarningModal";
 import MobileBlockModal from "./components/MobileBlockModal";
 import AnalyticsModal from "./components/AnalyticsModal";
 
 import { LOGIN_ENABLED } from "./config/auth";
 import { initializeFirebase } from "./lib/firebase";
+import { isAuthenticated } from "./lib/cookies";
+import { areCookiesAccepted } from "./lib/cookies";
 
 const queryClient = new QueryClient();
 
 const MainApp = () => {
   const location = useLocation();
-  const [isAuthenticated] = useState(() => {
+  const [isAuthed, setIsAuthed] = useState(() => {
     return (
+      isAuthenticated() ||
       sessionStorage.getItem("xyfen_authenticated") === "true" ||
       localStorage.getItem("xyfen_authenticated") === "true"
     );
@@ -44,33 +48,28 @@ const MainApp = () => {
   }, []);
 
   useEffect(() => {
-    if (analyticsAccepted) {
+    if (analyticsAccepted && areCookiesAccepted()) {
       ReactGA.initialize("G-L0SXBVTSSB");
       ReactGA.send({ hitType: "pageview", page: window.location.pathname });
     }
   }, [analyticsAccepted]);
 
-  useEffect(() => {
-    if (location.pathname === "/login" || location.pathname === "/register") {
-      return;
-    }
+  // Auth pages don't need protection
+  const isAuthPage = ["/login", "/register", "/auth"].includes(location.pathname);
 
-    if (!isAuthenticated && LOGIN_ENABLED) {
-      window.location.href = "/login";
-    }
-  }, [isAuthenticated, location.pathname]);
-
-  if (location.pathname === "/login" || location.pathname === "/register") {
+  if (isAuthPage) {
     return (
       <Routes>
+        <Route path="/auth" element={<Auth />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
       </Routes>
     );
   }
 
-  if (!isAuthenticated && LOGIN_ENABLED) {
-    return null;
+  // Redirect to auth check if login is enabled and not authenticated
+  if (!isAuthed && LOGIN_ENABLED) {
+    return <Navigate to="/auth" replace />;
   }
 
   return (
