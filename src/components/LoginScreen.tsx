@@ -3,12 +3,8 @@ import { Flame, Lock, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import {
-  signInWithEmail,
-  onAuthStateChanged,
-  initializeFirebase,
-  type FirebaseUser,
-} from "@/lib/firebase";
+import { initializeFirebase, onAuthStateChanged, signInWithEmail } from "@/lib/firebase";
+import { isLoginSubdomain } from "@/lib/auth";
 
 interface LoginScreenProps {
   onLoginSuccess: () => void;
@@ -23,10 +19,9 @@ const LoginScreen = ({ onLoginSuccess, onSwitchToRegister }: LoginScreenProps) =
   const [firebaseLoaded, setFirebaseLoaded] = useState(false);
   const { toast } = useToast();
 
-  const hostname = window.location.hostname;
-  const isLoginSubdomain = hostname.startsWith("login.");
+  const loginSubdomain = isLoginSubdomain();
 
-  // Wait for Firebase to load
+  // Initialize Firebase once
   useEffect(() => {
     const checkFirebase = () => {
       if (window.firebase) {
@@ -39,49 +34,44 @@ const LoginScreen = ({ onLoginSuccess, onSwitchToRegister }: LoginScreenProps) =
     checkFirebase();
   }, []);
 
-  // Check auth state after Firebase loads
+  // Check auth state
   useEffect(() => {
     if (!firebaseLoaded) return;
 
-    const unsubscribe = onAuthStateChanged((user: FirebaseUser | null) => {
+    const unsubscribe = onAuthStateChanged((user) => {
       if (user) {
         toast({ title: "Welcome Back", description: `Logged in as ${user.email}` });
-
-        // Only redirect if we are NOT on the login subdomain
-        if (!isLoginSubdomain) {
+        if (!loginSubdomain) {
           onLoginSuccess();
         }
       }
       setIsCheckingAuth(false);
     });
+
     return unsubscribe;
-  }, [firebaseLoaded, onLoginSuccess, toast, isLoginSubdomain]);
+  }, [firebaseLoaded, loginSubdomain, onLoginSuccess, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!email.trim() || !password.trim()) {
       toast({ title: "Fill all fields", variant: "destructive" });
       return;
     }
 
     setIsLoading(true);
-
     try {
       const result = await signInWithEmail(email, password);
       toast({ title: "Login Successful", description: `Welcome back ${result.user.email}` });
       onLoginSuccess();
     } catch (err: any) {
-      const message = err.code === "auth/invalid-credential" 
-        ? "Invalid email or password" 
-        : err.message;
+      const message = err.code === "auth/invalid-credential" ? "Invalid email or password" : err.message;
       toast({ title: "Login Failed", description: message, variant: "destructive" });
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   };
 
-  // Prevent rendering until Firebase is ready and auth check done
+  // Prevent flicker: only render once Firebase & auth are ready
   if (!firebaseLoaded || isCheckingAuth) {
     return (
       <div className="flex items-center justify-center h-screen text-muted-foreground">
@@ -94,6 +84,7 @@ const LoginScreen = ({ onLoginSuccess, onSwitchToRegister }: LoginScreenProps) =
   return (
     <div className="w-full max-w-md mx-auto">
       <div className="bg-card/90 backdrop-blur-xl border border-border/50 rounded-2xl p-6 shadow-2xl">
+        {/* Logo */}
         <div className="flex items-center justify-center gap-3 mb-6">
           <div className="relative">
             <Flame className="w-9 h-9 text-primary animate-pulse" />
@@ -110,6 +101,7 @@ const LoginScreen = ({ onLoginSuccess, onSwitchToRegister }: LoginScreenProps) =
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Email */}
           <div>
             <label htmlFor="email" className="text-sm font-medium text-foreground">Email</label>
             <div className="relative mt-1">
@@ -126,6 +118,7 @@ const LoginScreen = ({ onLoginSuccess, onSwitchToRegister }: LoginScreenProps) =
             </div>
           </div>
 
+          {/* Password */}
           <div>
             <label htmlFor="password" className="text-sm font-medium text-foreground">Password</label>
             <div className="relative mt-1">
@@ -152,9 +145,7 @@ const LoginScreen = ({ onLoginSuccess, onSwitchToRegister }: LoginScreenProps) =
                 <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
                 <span>Signing in...</span>
               </div>
-            ) : (
-              "Sign In"
-            )}
+            ) : "Sign In"}
           </Button>
         </form>
 
