@@ -46,10 +46,13 @@ const WarningModal = () => {
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse-slow" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-accent/10 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: "2s" }} />
+        <div
+          className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-accent/10 rounded-full blur-3xl animate-pulse-slow"
+          style={{ animationDelay: "2s" }}
+        />
       </div>
 
-      <div className="glass-strong rounded-3xl p-8 md:p-10 max-w-lg w-full text-center space-y-6 animate-scale-in relative">
+      <div className="glass-strong rounded-3xl p-8 md:p-10 max-w-lg w-full text-center space-y-8 animate-scale-in relative">
         {/* Warning Icon */}
         <div className="relative mx-auto w-20 h-20">
           <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl animate-pulse-slow" />
@@ -69,7 +72,7 @@ const WarningModal = () => {
             This site allows downloading content from YouTube. Make sure you
             respect copyright laws and YouTube's terms of service.
           </p>
-          
+
           <div className="flex items-start gap-3 p-4 bg-card/50 rounded-xl border border-border/50">
             <Cookie className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
             <div>
@@ -83,12 +86,12 @@ const WarningModal = () => {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-col sm:flex-row gap-4 w-full mt-2">
           <Button
             variant="outline"
             size="lg"
             onClick={handleDecline}
-            className="flex-1 gap-2"
+            className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-gray-300 hover:bg-gray-100 transition"
           >
             <X className="w-4 h-4" />
             Decline Cookies
@@ -97,14 +100,14 @@ const WarningModal = () => {
             variant="hero"
             size="lg"
             onClick={handleAccept}
-            className="flex-1 gap-2 group"
+            className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition group"
           >
             Accept & Continue
             <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
           </Button>
         </div>
 
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-muted-foreground mt-3">
           By continuing, you agree to our Terms of Service and Privacy Policy.
         </p>
       </div>
