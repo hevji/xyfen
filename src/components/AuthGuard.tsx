@@ -1,32 +1,27 @@
+// src/components/AuthGuard.tsx
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { initializeFirebase, onAuthStateChanged, getCurrentUser } from "@/lib/firebase";
 import { isLoginSubdomain } from "@/lib/auth";
+import { getCurrentUser, onAuthStateChanged } from "@/lib/firebase";
 
 interface AuthGuardProps {
   children: React.ReactNode;
 }
 
 const AuthGuard = ({ children }: AuthGuardProps) => {
-  const navigate = useNavigate();
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const loginSubdomain = isLoginSubdomain();
 
   useEffect(() => {
-    initializeFirebase();
-
     const unsubscribe = onAuthStateChanged((user) => {
       if (!user && !loginSubdomain) {
-        // Redirect only if not logged in and NOT on login subdomain
         window.location.href = "https://login.example.com/login";
       }
-      setIsCheckingAuth(false);
+      setCheckingAuth(false);
     });
-
     return unsubscribe;
   }, [loginSubdomain]);
 
-  if (isCheckingAuth) {
+  if (checkingAuth) {
     return (
       <div className="flex items-center justify-center h-screen text-muted-foreground">
         <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin mr-2" />
