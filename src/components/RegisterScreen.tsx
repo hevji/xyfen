@@ -7,6 +7,7 @@ import { Link } from "react-router-dom";
 import {
   registerWithEmail,
   onAuthStateChanged,
+  initializeFirebase,
   type FirebaseUser,
 } from "@/lib/firebase";
 
@@ -21,11 +22,28 @@ const RegisterScreen = ({ onRegisterSuccess, onSwitchToLogin }: RegisterScreenPr
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [firebaseLoaded, setFirebaseLoaded] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [termsModalOpen, setTermsModalOpen] = useState(false);
   const { toast } = useToast();
 
+  // Wait for Firebase to load
   useEffect(() => {
+    const checkFirebase = () => {
+      if (window.firebase) {
+        initializeFirebase();
+        setFirebaseLoaded(true);
+      } else {
+        setTimeout(checkFirebase, 100);
+      }
+    };
+    checkFirebase();
+  }, []);
+
+  // Check auth state after Firebase loads
+  useEffect(() => {
+    if (!firebaseLoaded) return;
+
     const unsubscribe = onAuthStateChanged((user: FirebaseUser | null) => {
       if (user) {
         toast({ title: "Welcome!", description: `Logged in as ${user.email}` });
@@ -34,7 +52,7 @@ const RegisterScreen = ({ onRegisterSuccess, onSwitchToLogin }: RegisterScreenPr
       setIsCheckingAuth(false);
     });
     return unsubscribe;
-  }, [onRegisterSuccess, toast]);
+  }, [firebaseLoaded, onRegisterSuccess, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,18 +84,21 @@ const RegisterScreen = ({ onRegisterSuccess, onSwitchToLogin }: RegisterScreenPr
       toast({ title: "Account Created!", description: `Welcome ${result.user.email}` });
       onRegisterSuccess();
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      const message = err.code === "auth/email-already-in-use"
+        ? "An account with this email already exists"
+        : err.message;
+      toast({ title: "Registration Failed", description: message, variant: "destructive" });
     }
 
     setIsLoading(false);
   };
 
-  if (isCheckingAuth) {
+  if (isCheckingAuth && !firebaseLoaded) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
           <div className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
-          <span className="text-muted-foreground">Checking authentication...</span>
+          <span className="text-muted-foreground">Loading...</span>
         </div>
       </div>
     );
@@ -139,7 +160,7 @@ const RegisterScreen = ({ onRegisterSuccess, onSwitchToLogin }: RegisterScreenPr
                 <Input
                   id="password"
                   type="password"
-                  placeholder="Create a strong password"
+                  placeholder="Create a password (min 6 characters)"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="pl-11 h-12 bg-background/50 border-border/50 focus:border-primary focus:ring-primary/20 transition-all duration-300"
@@ -178,7 +199,7 @@ const RegisterScreen = ({ onRegisterSuccess, onSwitchToLogin }: RegisterScreenPr
                 <button
                   type="button"
                   onClick={() => setTermsModalOpen(true)}
-                  className="underline text-primary"
+                  className="underline text-primary hover:text-primary/80"
                 >
                   Terms of Service
                 </button>
@@ -187,7 +208,7 @@ const RegisterScreen = ({ onRegisterSuccess, onSwitchToLogin }: RegisterScreenPr
 
             <Button
               type="submit"
-              disabled={isLoading || !agreed}
+              disabled={isLoading || !agreed || !firebaseLoaded}
               className="w-full h-12 text-base font-semibold bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 shadow-lg shadow-primary/25 transition-all duration-300 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5"
             >
               {isLoading ? (
@@ -204,11 +225,11 @@ const RegisterScreen = ({ onRegisterSuccess, onSwitchToLogin }: RegisterScreenPr
           <p className="text-center text-sm mt-4">
             Already have an account?{" "}
             {onSwitchToLogin ? (
-              <button onClick={onSwitchToLogin} className="text-primary underline">
+              <button onClick={onSwitchToLogin} className="text-primary underline hover:text-primary/80">
                 Sign In
               </button>
             ) : (
-              <Link to="/login" className="text-primary underline">
+              <Link to="/login" className="text-primary underline hover:text-primary/80">
                 Sign In
               </Link>
             )}
@@ -217,7 +238,7 @@ const RegisterScreen = ({ onRegisterSuccess, onSwitchToLogin }: RegisterScreenPr
           {/* Terms Modal */}
           {termsModalOpen && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-              <div className="bg-card p-6 rounded-xl max-w-lg w-full relative">
+              <div className="bg-card p-6 rounded-xl max-w-lg w-full mx-4 relative max-h-[80vh] overflow-hidden flex flex-col">
                 <button
                   onClick={() => setTermsModalOpen(false)}
                   className="absolute top-3 right-3 text-muted-foreground hover:text-foreground"
@@ -225,7 +246,7 @@ const RegisterScreen = ({ onRegisterSuccess, onSwitchToLogin }: RegisterScreenPr
                   ✕
                 </button>
                 <h2 className="text-xl font-semibold mb-4">Terms of Service</h2>
-                <div className="max-h-80 overflow-y-auto space-y-2 text-sm">
+                <div className="overflow-y-auto flex-1 space-y-2 text-sm pr-2">
                   <p>Terms of Service</p>
                   <p>Effective Date: December 23, 2025</p>
                   <p>
@@ -287,6 +308,11 @@ const RegisterScreen = ({ onRegisterSuccess, onSwitchToLogin }: RegisterScreenPr
                     For questions or concerns about these Terms, please contact us at
                     tnzruho@gmail.com.
                   </p>
+                </div>
+                <div className="mt-4 pt-4 border-t border-border">
+                  <Button onClick={() => setTermsModalOpen(false)} className="w-full">
+                    Close
+                  </Button>
                 </div>
               </div>
             </div>

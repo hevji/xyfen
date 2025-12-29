@@ -1,13 +1,16 @@
 import { useNavigate } from "react-router-dom";
 import LoginScreen from "@/components/LoginScreen";
+import { setAuthCookie } from "@/lib/cookies";
 
 const Login = () => {
   const navigate = useNavigate();
 
   const handleLoginSuccess = () => {
+    // Set all auth indicators
+    setAuthCookie(true);
     sessionStorage.setItem("xyfen_authenticated", "true");
     localStorage.setItem("xyfen_authenticated", "true");
-    window.location.href = "/";
+    navigate("/", { replace: true });
   };
 
   const handleSwitchToRegister = () => {

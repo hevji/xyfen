@@ -1,26 +1,36 @@
 import { useState, useEffect } from "react";
-import { AlertTriangle, ArrowRight } from "lucide-react";
+import { AlertTriangle, ArrowRight, Cookie, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { isWarningAccepted, setWarningAccepted, areCookiesAccepted, setCookiesAccepted } from "@/lib/cookies";
 
 /**
  * WarningModal Component
- * Displays a fullscreen warning about copyright before allowing site access
+ * Displays a fullscreen warning about copyright and cookie consent
  */
 const WarningModal = () => {
   const [isVisible, setIsVisible] = useState(true);
   const [isFading, setIsFading] = useState(false);
 
-  const handleEnterSite = () => {
+  const handleAccept = () => {
+    setCookiesAccepted(true);
+    setWarningAccepted();
     setIsFading(true);
     setTimeout(() => {
       setIsVisible(false);
-      sessionStorage.setItem("warningAccepted", "true");
+    }, 600);
+  };
+
+  const handleDecline = () => {
+    setCookiesAccepted(false);
+    setWarningAccepted();
+    setIsFading(true);
+    setTimeout(() => {
+      setIsVisible(false);
     }, 600);
   };
 
   useEffect(() => {
-    const accepted = sessionStorage.getItem("warningAccepted");
-    if (accepted === "true") {
+    if (isWarningAccepted()) {
       setIsVisible(false);
     }
   }, []);
@@ -39,7 +49,7 @@ const WarningModal = () => {
         <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-accent/10 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: "2s" }} />
       </div>
 
-      <div className="glass-strong rounded-3xl p-8 md:p-10 max-w-lg w-full text-center space-y-8 animate-scale-in relative">
+      <div className="glass-strong rounded-3xl p-8 md:p-10 max-w-lg w-full text-center space-y-6 animate-scale-in relative">
         {/* Warning Icon */}
         <div className="relative mx-auto w-20 h-20">
           <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl animate-pulse-slow" />
@@ -50,25 +60,53 @@ const WarningModal = () => {
 
         {/* Warning Title */}
         <h2 className="font-display text-3xl font-bold text-foreground">
-          Note
+          Before You Continue
         </h2>
 
         {/* Warning Text */}
-        <p className="text-muted-foreground leading-relaxed text-lg">
-          This site allows downloading content from YouTube. Make sure you
-          respect copyright laws and YouTube's terms of service.
-        </p>
+        <div className="space-y-4 text-left">
+          <p className="text-muted-foreground leading-relaxed">
+            This site allows downloading content from YouTube. Make sure you
+            respect copyright laws and YouTube's terms of service.
+          </p>
+          
+          <div className="flex items-start gap-3 p-4 bg-card/50 rounded-xl border border-border/50">
+            <Cookie className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+            <div>
+              <h3 className="font-medium text-foreground text-sm">Cookie Consent</h3>
+              <p className="text-muted-foreground text-sm mt-1">
+                We use cookies to enhance your experience, remember your preferences, 
+                and for authentication. By clicking "Accept & Continue", you consent to our use of cookies.
+              </p>
+            </div>
+          </div>
+        </div>
 
-        {/* Enter Site Button */}
-        <Button
-          variant="hero"
-          size="xl"
-          onClick={handleEnterSite}
-          className="w-full gap-3 group"
-        >
-          Enter Site
-          <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
-        </Button>
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={handleDecline}
+            className="flex-1 gap-2"
+          >
+            <X className="w-4 h-4" />
+            Decline Cookies
+          </Button>
+          <Button
+            variant="hero"
+            size="lg"
+            onClick={handleAccept}
+            className="flex-1 gap-2 group"
+          >
+            Accept & Continue
+            <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
+          </Button>
+        </div>
+
+        <p className="text-xs text-muted-foreground">
+          By continuing, you agree to our Terms of Service and Privacy Policy.
+        </p>
       </div>
     </div>
   );

@@ -28,32 +28,45 @@ export interface FirebaseUser {
 let initialized = false;
 
 /**
+ * Check if Firebase is ready to use
+ */
+export const isFirebaseReady = (): boolean => {
+  return initialized && !!window.firebase;
+};
+
+/**
  * Initialize Firebase app (only once)
  */
-export const initializeFirebase = () => {
-  if (initialized || !window.firebase) return;
+export const initializeFirebase = (): boolean => {
+  if (initialized) return true;
+  if (!window.firebase) return false;
 
   if (!isFirebaseConfigured()) {
     console.warn("Firebase is not configured. Please set environment variables.");
-    return;
+    return false;
   }
 
   try {
     window.firebase.initializeApp(firebaseConfig);
     initialized = true;
+    return true;
   } catch (error) {
     console.log("Firebase already initialized");
+    initialized = true;
+    return true;
   }
 };
 
 /**
- * Get Firebase Auth instance
+ * Get Firebase Auth instance (safe version)
  */
 export const getAuth = () => {
   if (!window.firebase) {
-    throw new Error("Firebase SDK not loaded");
+    return null;
   }
-  initializeFirebase();
+  if (!initialized) {
+    initializeFirebase();
+  }
   return window.firebase.auth();
 };
 
@@ -62,25 +75,20 @@ export const getAuth = () => {
  */
 export const signInWithEmail = async (email: string, password: string) => {
   const auth = getAuth();
+  if (!auth) {
+    throw new Error("Firebase is not available. Please try again.");
+  }
   return auth.signInWithEmailAndPassword(email, password);
 };
 
 /**
- * Register user with email and password + optional reCAPTCHA token
+ * Register user with email and password
  */
-export const registerWithEmail = async (email: string, password: string, recaptchaToken?: string) => {
+export const registerWithEmail = async (email: string, password: string) => {
   const auth = getAuth();
-
-  // Optional: send reCAPTCHA token to your backend for verification
-  if (recaptchaToken) {
-    // Example:
-    // await fetch("/api/verify-recaptcha", {
-    //   method: "POST",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify({ token: recaptchaToken }),
-    // });
+  if (!auth) {
+    throw new Error("Firebase is not available. Please try again.");
   }
-
   return auth.createUserWithEmailAndPassword(email, password);
 };
 
@@ -89,14 +97,22 @@ export const registerWithEmail = async (email: string, password: string, recaptc
  */
 export const signOut = async () => {
   const auth = getAuth();
+  if (!auth) {
+    throw new Error("Firebase is not available.");
+  }
   return auth.signOut();
 };
 
 /**
- * Subscribe to auth state changes
+ * Subscribe to auth state changes (safe version)
  */
 export const onAuthStateChanged = (callback: (user: FirebaseUser | null) => void) => {
   const auth = getAuth();
+  if (!auth) {
+    // Return a no-op unsubscribe function if Firebase isn't ready
+    callback(null);
+    return () => {};
+  }
   return auth.onAuthStateChanged(callback);
 };
 
@@ -106,9 +122,8 @@ export const onAuthStateChanged = (callback: (user: FirebaseUser | null) => void
 export const getCurrentUser = (): FirebaseUser | null => {
   try {
     const auth = getAuth();
-    return auth.currentUser;
+    return auth?.currentUser || null;
   } catch {
     return null;
   }
 };
-
