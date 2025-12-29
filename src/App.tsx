@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ReactGA from "react-ga4";
 
 import Index from "./pages/Index";
@@ -11,41 +11,17 @@ import Download from "./pages/Download";
 import BackendSetup from "./pages/BackendSetup";
 import TermsOfService from "./pages/TermsOfService";
 import NotFound from "./pages/NotFound";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Auth from "./pages/Auth";
+
 import WarningModal from "./components/WarningModal";
 import MobileBlockModal from "./components/MobileBlockModal";
 import AnalyticsModal from "./components/AnalyticsModal";
 
-import { LOGIN_ENABLED } from "./config/auth";
-import { initializeFirebase } from "./lib/firebase";
-import { isAuthenticated } from "./lib/cookies";
 import { areCookiesAccepted } from "./lib/cookies";
 
 const queryClient = new QueryClient();
 
 const MainApp = () => {
-  const location = useLocation();
-  const [isAuthed, setIsAuthed] = useState(() => {
-    return (
-      isAuthenticated() ||
-      sessionStorage.getItem("xyfen_authenticated") === "true" ||
-      localStorage.getItem("xyfen_authenticated") === "true"
-    );
-  });
   const [analyticsAccepted, setAnalyticsAccepted] = useState(false);
-
-  useEffect(() => {
-    const initFirebase = () => {
-      if (window.firebase) {
-        initializeFirebase();
-      } else {
-        setTimeout(initFirebase, 100);
-      }
-    };
-    initFirebase();
-  }, []);
 
   useEffect(() => {
     if (analyticsAccepted && areCookiesAccepted()) {
@@ -53,24 +29,6 @@ const MainApp = () => {
       ReactGA.send({ hitType: "pageview", page: window.location.pathname });
     }
   }, [analyticsAccepted]);
-
-  // Auth pages don't need protection
-  const isAuthPage = ["/login", "/register", "/auth"].includes(location.pathname);
-
-  if (isAuthPage) {
-    return (
-      <Routes>
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-      </Routes>
-    );
-  }
-
-  // Redirect to auth check if login is enabled and not authenticated
-  if (!isAuthed && LOGIN_ENABLED) {
-    return <Navigate to="/auth" replace />;
-  }
 
   return (
     <>
