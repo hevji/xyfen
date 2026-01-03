@@ -11,6 +11,8 @@ import Download from "./pages/Download";
 import BackendSetup from "./pages/BackendSetup";
 import TermsOfService from "./pages/TermsOfService";
 import NotFound from "./pages/NotFound";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 
 import WarningModal from "./components/WarningModal";
 import MobileBlockModal from "./components/MobileBlockModal";
@@ -37,6 +39,8 @@ const MainApp = () => {
       <AnalyticsModal onAccept={() => setAnalyticsAccepted(true)} />
 
       <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/" element={<Index />} />
         <Route path="/download" element={<Download />} />
         <Route path="/backend-setup" element={<BackendSetup />} />
