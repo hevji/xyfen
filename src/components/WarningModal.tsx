@@ -1,22 +1,27 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 
-// Make sure Turnstile script is included in your HTML:
-// <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+declare global {
+  interface Window {
+    turnstile?: {
+      render: (container: HTMLElement, options: { sitekey: string; callback: (token: string) => void }) => void;
+    };
+  }
+}
 
 const WarningModal = () => {
   const [isVisible, setIsVisible] = useState(true);
   const [verified, setVerified] = useState(false);
 
   useEffect(() => {
-    const turnstileCallback = (token) => {
+    const turnstileCallback = (token: string) => {
       setVerified(!!token);
     };
 
     const container = document.getElementById("turnstile-container");
     if (container && window.turnstile) {
       window.turnstile.render(container, {
-        sitekey: "0x4AAAAAACKQbzrFcssFcdii", // <-- replace with your key
+        sitekey: "0x4AAAAAACKQbzrFcssFcdii",
         callback: turnstileCallback,
       });
     }
@@ -54,7 +59,7 @@ const WarningModal = () => {
           </Button>
 
           <Button
-            variant="primary"
+            variant="default"
             className={`flex-1 ${!verified ? "opacity-50 cursor-not-allowed" : ""}`}
             onClick={handleAccept}
             disabled={!verified}
