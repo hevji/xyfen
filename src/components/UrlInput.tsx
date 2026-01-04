@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 // Turnstile site key - replace with your own
-const TURNSTILE_SITE_KEY = "0x4AAAAAAAzlWy9W-i8r25eR";
+const TURNSTILE_SITE_KEY = "0x4AAAAAACKQbzrFcssFcdii";
 
 declare global {
   interface Window {
