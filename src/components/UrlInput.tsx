@@ -1,7 +1,25 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, Search, AlertCircle, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+
+// Turnstile site key - replace with your own
+const TURNSTILE_SITE_KEY = "0x4AAAAAAAzlWy9W-i8r25eR";
+
+declare global {
+  interface Window {
+    turnstile?: {
+      render: (container: string | HTMLElement, options: {
+        sitekey: string;
+        callback: (token: string) => void;
+        'expired-callback'?: () => void;
+        theme?: 'light' | 'dark' | 'auto';
+      }) => string;
+      reset: (widgetId: string) => void;
+      remove: (widgetId: string) => void;
+    };
+  }
+}
 
 interface UrlInputProps {
   onSubmit: (url: string) => void;
@@ -10,13 +28,55 @@ interface UrlInputProps {
 
 /**
  * UrlInput Component
- * Handles YouTube URL input with validation
- * Features a clean design with icon and animated button
+ * Handles YouTube URL input with validation and Turnstile verification
  */
 const UrlInput = ({ onSubmit, isLoading }: UrlInputProps) => {
   const [url, setUrl] = useState("");
   const [error, setError] = useState("");
   const [isFocused, setIsFocused] = useState(false);
+  const [showTurnstile, setShowTurnstile] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileLoaded, setTurnstileLoaded] = useState(false);
+  const turnstileRef = useRef<HTMLDivElement>(null);
+  const widgetIdRef = useRef<string | null>(null);
+
+  // Load Turnstile script
+  useEffect(() => {
+    if (document.getElementById('turnstile-script')) {
+      setTurnstileLoaded(true);
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.id = 'turnstile-script';
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+    script.async = true;
+    script.onload = () => setTurnstileLoaded(true);
+    document.head.appendChild(script);
+  }, []);
+
+  // Render Turnstile widget when shown
+  useEffect(() => {
+    if (showTurnstile && turnstileLoaded && turnstileRef.current && window.turnstile && !widgetIdRef.current) {
+      widgetIdRef.current = window.turnstile.render(turnstileRef.current, {
+        sitekey: TURNSTILE_SITE_KEY,
+        callback: (token: string) => {
+          setTurnstileToken(token);
+        },
+        'expired-callback': () => {
+          setTurnstileToken(null);
+        },
+        theme: 'dark',
+      });
+    }
+
+    return () => {
+      if (widgetIdRef.current && window.turnstile) {
+        window.turnstile.remove(widgetIdRef.current);
+        widgetIdRef.current = null;
+      }
+    };
+  }, [showTurnstile, turnstileLoaded]);
 
   // Validate YouTube URL format
   const validateUrl = (input: string): boolean => {
@@ -29,7 +89,7 @@ const UrlInput = ({ onSubmit, isLoading }: UrlInputProps) => {
     e.preventDefault();
     setError("");
 
-    // Validate URL before submitting
+    // Validate URL before showing Turnstile
     if (!url.trim()) {
       setError("Please enter a YouTube URL");
       return;
@@ -40,7 +100,22 @@ const UrlInput = ({ onSubmit, isLoading }: UrlInputProps) => {
       return;
     }
 
+    // Show Turnstile if not yet verified
+    if (!turnstileToken) {
+      setShowTurnstile(true);
+      return;
+    }
+
+    // Submit with verified token
     onSubmit(url);
+    
+    // Reset after submission
+    setShowTurnstile(false);
+    setTurnstileToken(null);
+    if (widgetIdRef.current && window.turnstile) {
+      window.turnstile.remove(widgetIdRef.current);
+      widgetIdRef.current = null;
+    }
   };
 
   return (
@@ -66,7 +141,16 @@ const UrlInput = ({ onSubmit, isLoading }: UrlInputProps) => {
             value={url}
             onChange={(e) => {
               setUrl(e.target.value);
-              setError(""); // Clear error on input
+              setError("");
+              // Reset turnstile if URL changes
+              if (showTurnstile) {
+                setShowTurnstile(false);
+                setTurnstileToken(null);
+                if (widgetIdRef.current && window.turnstile) {
+                  window.turnstile.remove(widgetIdRef.current);
+                  widgetIdRef.current = null;
+                }
+              }
             }}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
@@ -79,7 +163,7 @@ const UrlInput = ({ onSubmit, isLoading }: UrlInputProps) => {
             type="submit"
             variant="hero"
             size="lg"
-            disabled={isLoading}
+            disabled={isLoading || (showTurnstile && !turnstileToken)}
             className="shrink-0 gap-2 py-4 sm:py-5 group"
           >
             {isLoading ? (
@@ -94,6 +178,17 @@ const UrlInput = ({ onSubmit, isLoading }: UrlInputProps) => {
           </Button>
         </div>
       </div>
+
+      {/* Turnstile widget */}
+      {showTurnstile && (
+        <div className="flex flex-col items-center gap-3 animate-fade-in">
+          <p className="text-sm text-muted-foreground">Please verify you're human</p>
+          <div ref={turnstileRef} className="flex justify-center" />
+          {turnstileToken && (
+            <p className="text-sm text-green-500">✓ Verified! Click "Fetch Video" to continue</p>
+          )}
+        </div>
+      )}
 
       {/* Error message */}
       {error && (
