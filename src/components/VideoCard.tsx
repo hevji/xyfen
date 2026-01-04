@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import DownloadProgress, { DownloadStatus } from "@/components/DownloadProgress";
 
 // Cloudflare Turnstile site key
-const TURNSTILE_SITE_KEY = "0x4AAAAAAAzlWy9W-i8r25eR";
+const TURNSTILE_SITE_KEY = "0x4AAAAAACKgczurJ0wAOEl0";
 
 // Interface for video metadata returned from the backend
 interface VideoInfo {
