@@ -37,7 +37,7 @@ const WarningModal = () => {
   };
 
   const handleDecline = () => {
-    setState("closed");
+    window.location.href = "https://www.google.com";
   };
 
   if (state === "closed") return null;
