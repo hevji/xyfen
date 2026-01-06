@@ -37,7 +37,7 @@ const WarningModal = () => {
   };
 
   const handleDecline = () => {
-    window.location.href = "https://www.google.com";
+    window.location.href = "https://www.google.com?utm_source=xyfen";
   };
 
   if (state === "closed") return null;
