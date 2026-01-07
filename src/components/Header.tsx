@@ -31,11 +31,11 @@ const Header = () => {
             className="gap-2"
           >
             <a
-              href="https://github.com/hevji/xyfen-backend/releases/download/Backend/backend.py"
+              href="https://github.com/hevji/Xyfen-Backend/releases/download/Backend-Zip/XYFEN_BACKEND.zip"
               download
             >
               <Download className="w-4 h-4" />
-              <span className="hidden sm:inline">Backend Script</span>
+              <span className="hidden sm:inline">Backend Script (zip)</span>
             </a>
           </Button>
 
