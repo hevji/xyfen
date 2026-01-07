@@ -1,4 +1,4 @@
-import { useEffect } from "react"; // <-- toegevoegd
+import { useEffect } from "react"; // <-- keep this
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -34,21 +34,32 @@ const MainApp = () => {
 };
 
 const App = () => {
-  // 🔥 snippet om Lovable badge te verwijderen
+  // 🔥 Hide and remove Lovable badge instantly
   useEffect(() => {
+    // 1️⃣ Inject CSS to hide any badge immediately
+    const style = document.createElement("style");
+    style.innerHTML = `
+      [id*="lovable"], .lovable-badge {
+        display: none !important;
+      }
+    `;
+    document.head.appendChild(style);
+
+    // 2️⃣ JS to remove badge completely after it loads
     const removeBadge = () => {
       const badge = document.querySelector('[id*="lovable"], .lovable-badge');
       if (badge) badge.remove();
     };
 
-    // direct proberen
-    removeBadge();
+    removeBadge(); // try removing immediately
 
-    // observer voor badges die later injected worden
     const observer = new MutationObserver(removeBadge);
     observer.observe(document.body, { childList: true, subtree: true });
 
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      document.head.removeChild(style);
+    };
   }, []);
 
   return (
