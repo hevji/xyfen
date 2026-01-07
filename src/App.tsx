@@ -1,3 +1,4 @@
+import { useEffect } from "react"; // <-- toegevoegd
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -33,6 +34,23 @@ const MainApp = () => {
 };
 
 const App = () => {
+  // 🔥 snippet om Lovable badge te verwijderen
+  useEffect(() => {
+    const removeBadge = () => {
+      const badge = document.querySelector('[id*="lovable"], .lovable-badge');
+      if (badge) badge.remove();
+    };
+
+    // direct proberen
+    removeBadge();
+
+    // observer voor badges die later injected worden
+    const observer = new MutationObserver(removeBadge);
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
