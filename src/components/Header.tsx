@@ -26,7 +26,7 @@ const Header = () => {
     };
 
     checkServer();
-    const interval = setInterval(checkServer, 30000); // Check every 30s
+    const interval = setInterval(checkServer, 10000); // Check every 30s
     return () => clearInterval(interval);
   }, []);
 
