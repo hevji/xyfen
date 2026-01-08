@@ -1,5 +1,8 @@
-import { Download, Github, Flame } from "lucide-react";
+import { Download, Github, Flame, Circle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
+
+const API_URL = "http://localhost:5000";
 
 /**
  * Header Component
@@ -7,6 +10,26 @@ import { Button } from "@/components/ui/button";
  * Uses glassmorphism for a modern look
  */
 const Header = () => {
+  const [serverStatus, setServerStatus] = useState<"checking" | "online" | "offline">("checking");
+
+  useEffect(() => {
+    const checkServer = async () => {
+      try {
+        const response = await fetch(`${API_URL}/health`, { 
+          method: "GET",
+          signal: AbortSignal.timeout(5000)
+        });
+        setServerStatus(response.ok ? "online" : "offline");
+      } catch {
+        setServerStatus("offline");
+      }
+    };
+
+    checkServer();
+    const interval = setInterval(checkServer, 30000); // Check every 30s
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 glass border-b border-border/30">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -23,6 +46,21 @@ const Header = () => {
 
         {/* Navigation */}
         <nav className="flex items-center gap-3">
+          {/* Server Status */}
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg glass text-xs">
+            <Circle 
+              className={`w-2 h-2 fill-current ${
+                serverStatus === "online" 
+                  ? "text-green-500" 
+                  : serverStatus === "offline" 
+                  ? "text-red-500" 
+                  : "text-yellow-500 animate-pulse"
+              }`} 
+            />
+            <span className="text-muted-foreground">
+              {serverStatus === "online" ? "Server Online" : serverStatus === "offline" ? "Server Offline" : "Checking..."}
+            </span>
+          </div>
           {/* Backend Download Button */}
           <Button
             variant="glass"
