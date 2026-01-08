@@ -1,8 +1,7 @@
 import { Download, Github, Flame, Circle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
-
-const API_URL = "http://localhost:5000";
+import { API_URL } from "@/lib/config";
 
 /**
  * Header Component
