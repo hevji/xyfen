@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useDownload } from "@/hooks/useDownload";
 import { ArrowLeft } from "lucide-react";
+import { API_URL } from "@/lib/config";
 
 // Video metadata interface
 interface VideoInfo {
@@ -22,9 +23,6 @@ interface VideoInfo {
     size: string;
   }>;
 }
-
-// API endpoint - Local backend
-const API_URL = "http://localhost:5000";
 
 /**
  * Download Page - Handles video fetching and downloading via query params
