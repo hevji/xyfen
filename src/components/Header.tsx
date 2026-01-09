@@ -1,6 +1,8 @@
-import { Download, Github, Flame, Circle } from "lucide-react";
+import { Download, Github, Flame, Circle, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { useEffect, useState } from "react";
+import { useTheme } from "next-themes";
 import { API_URL } from "@/lib/config";
 
 /**
@@ -10,6 +12,13 @@ import { API_URL } from "@/lib/config";
  */
 const Header = () => {
   const [serverStatus, setServerStatus] = useState<"checking" | "online" | "offline">("checking");
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  // Avoid hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const checkServer = async () => {
@@ -56,10 +65,24 @@ const Header = () => {
                   : "text-yellow-500 animate-pulse"
               }`} 
             />
-            <span className="text-muted-foreground">
+            <span className="text-muted-foreground hidden sm:inline">
               {serverStatus === "online" ? "Server Online" : serverStatus === "offline" ? "Server Offline" : "Checking..."}
             </span>
           </div>
+
+          {/* Theme Toggle */}
+          {mounted && (
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg glass">
+              <Moon className="w-3.5 h-3.5 text-muted-foreground" />
+              <Switch
+                checked={theme === "light"}
+                onCheckedChange={(checked) => setTheme(checked ? "light" : "dark")}
+                className="data-[state=checked]:bg-primary"
+              />
+              <Sun className="w-3.5 h-3.5 text-muted-foreground" />
+            </div>
+          )}
+
           {/* Backend Download Button */}
           <Button
             variant="glass"
