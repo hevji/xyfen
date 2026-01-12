@@ -14,8 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ['Outfit', 'sans-serif'],
-        body: ['Plus Jakarta Sans', 'sans-serif'],
+        display: ['JetBrains Mono', 'Fira Code', 'monospace'],
+        body: ['JetBrains Mono', 'Fira Code', 'monospace'],
+        mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -97,12 +98,26 @@ export default {
           to: { opacity: "1", transform: "translateX(0)" },
         },
         "glow-pulse": {
-          "0%, 100%": { opacity: "0.5", transform: "scale(1)" },
-          "50%": { opacity: "1", transform: "scale(1.05)" },
+          "0%, 100%": { 
+            opacity: "0.6", 
+            boxShadow: "0 0 20px hsl(175 70% 45% / 0.3)" 
+          },
+          "50%": { 
+            opacity: "1", 
+            boxShadow: "0 0 40px hsl(175 70% 45% / 0.5)" 
+          },
         },
         "bounce-subtle": {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-5px)" },
+        },
+        "shimmer": {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" },
+        },
+        "float": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-10px)" },
         },
       },
       animation: {
@@ -115,12 +130,15 @@ export default {
         "slide-in-right": "slide-in-right 0.5s ease-out forwards",
         "glow-pulse": "glow-pulse 3s ease-in-out infinite",
         "bounce-subtle": "bounce-subtle 2s ease-in-out infinite",
+        "shimmer": "shimmer 2s linear infinite",
+        "float": "float 3s ease-in-out infinite",
       },
       boxShadow: {
-        glow: "0 0 40px hsl(24 95% 53% / 0.2), 0 0 80px hsl(24 95% 53% / 0.1)",
-        "glow-lg": "0 0 60px hsl(24 95% 53% / 0.3), 0 0 120px hsl(24 95% 53% / 0.15)",
-        "glow-sm": "0 0 20px hsl(24 95% 53% / 0.15)",
-        "card-hover": "0 20px 60px -15px hsl(24 95% 53% / 0.2), 0 0 0 1px hsl(24 95% 53% / 0.1)",
+        glow: "0 0 40px hsl(175 70% 45% / 0.25), 0 0 80px hsl(175 70% 45% / 0.15)",
+        "glow-lg": "0 0 60px hsl(175 70% 45% / 0.35), 0 0 120px hsl(175 70% 45% / 0.2)",
+        "glow-sm": "0 0 20px hsl(175 70% 45% / 0.2)",
+        "glow-intense": "0 0 30px hsl(175 70% 45% / 0.5), 0 0 60px hsl(175 70% 45% / 0.3), 0 0 100px hsl(175 70% 45% / 0.15)",
+        "card-hover": "0 20px 60px -15px hsl(175 70% 45% / 0.25), 0 0 0 1px hsl(175 70% 45% / 0.15)",
       },
     },
   },
