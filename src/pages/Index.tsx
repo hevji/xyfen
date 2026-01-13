@@ -70,7 +70,7 @@ const Index = () => {
             {/* Floating badge */}
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass text-sm text-muted-foreground animate-fade-in">
               <Flame className="w-4 h-4 text-primary" />
-              <span>Free & Open Source</span>
+              <span>Free & Adless</span>
             </div>
 
             <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight animate-fade-in" style={{ animationDelay: "0.1s" }}>
@@ -127,7 +127,7 @@ const Index = () => {
               className="gap-2"
             >
               <Music2 className="w-4 h-4" />
-              YouTube Music Downloader
+              YouTube Music Downloader (coming soon!)
             </Button>
             <Button
               variant="glass"
