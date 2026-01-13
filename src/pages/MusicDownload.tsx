@@ -1,89 +1,115 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Music2, ArrowLeft, Download, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import VideoCard from "@/components/VideoCard";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useDownload } from "@/hooks/useDownload";
+import { ArrowLeft } from "lucide-react";
 import { API_URL } from "@/lib/config";
 
-interface TrackInfo {
+// Video metadata interface (same as main Download page)
+interface VideoInfo {
   title: string;
-  artist: string;
   thumbnail: string;
   duration: string;
-  album?: string;
+  views: string;
+  channel: string;
+  formats: Array<{
+    quality: string;
+    format: string;
+    size: string;
+  }>;
 }
 
 /**
- * Music Download Page - Fetch track info and download as MP3
+ * Music Download Page - Handles music fetching and downloading via query params
+ * Uses the SAME flow as the main Download page
  */
 const MusicDownload = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const musicId = searchParams.get("musicId");
+  const videoId = searchParams.get("videoId");
+  
+  const [isLoading, setIsLoading] = useState(false);
+  const [videoInfo, setVideoInfo] = useState<VideoInfo | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [isDownloading, setIsDownloading] = useState(false);
-  const [trackInfo, setTrackInfo] = useState<TrackInfo | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [downloadComplete, setDownloadComplete] = useState(false);
+  const {
+    downloads,
+    startDownload,
+    downloadFile,
+    retryDownload,
+    getActiveDownload,
+  } = useDownload({ apiUrl: API_URL });
+
+  // Normalize YouTube Music URL to standard YouTube URL
+  const videoUrl = videoId ? `https://www.youtube.com/watch?v=${videoId}` : "";
 
   /**
-   * Validate music ID format
-   */
-  const isValidMusicId = (id: string | null): boolean => {
-    if (!id) return false;
-    return /^[a-zA-Z0-9_-]{11}$/.test(id);
-  };
-
-  /**
-   * Fetch track information
+   * Fetch video information from the backend
+   * Uses the SAME /api/fetch endpoint as main site
    */
   useEffect(() => {
-    if (!musicId) {
-      setError("No track ID provided");
-      setIsLoading(false);
+    if (!videoId) {
+      setError("No video ID provided");
       return;
     }
 
-    if (!isValidMusicId(musicId)) {
-      setError("Invalid track ID format");
-      setIsLoading(false);
+    // Validate video ID format
+    if (!/^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
+      setError("Invalid video ID format");
       return;
     }
 
-    const fetchTrackInfo = async () => {
+    const fetchVideo = async () => {
       setIsLoading(true);
+      setVideoInfo(null);
       setError(null);
 
+      // Debug logging
+      console.log("[MusicDownload] Video ID:", videoId);
+      console.log("[MusicDownload] Normalized URL:", videoUrl);
+      console.log("[MusicDownload] API URL:", API_URL);
+
       try {
-        const response = await fetch(`${API_URL}/api/music/info`, {
+        const fetchEndpoint = `${API_URL}/api/fetch`;
+        console.log("[MusicDownload] Fetching from:", fetchEndpoint);
+        
+        const response = await fetch(fetchEndpoint, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ musicId }),
+          body: JSON.stringify({ url: videoUrl }),
         });
+
+        console.log("[MusicDownload] Response status:", response.status);
 
         if (!response.ok) {
           const errorData = await response.json();
+          console.error("[MusicDownload] Error response:", errorData);
           throw new Error(errorData.error || "Failed to fetch track info");
         }
 
         const data = await response.json();
-        setTrackInfo(data);
+        console.log("[MusicDownload] Track data received:", data.title);
+        
+        setVideoInfo(data);
         toast({
           title: "Track found!",
-          description: "Ready to download as MP3.",
+          description: "Select a quality to download.",
         });
       } catch (err) {
-        console.error("Fetch error:", err);
-        setError("Unable to fetch track information. Please try again.");
+        console.error("[MusicDownload] Fetch error:", err);
+        const errorMessage = err instanceof Error ? err.message : "Unknown error";
+        setError(`Unable to fetch track info: ${errorMessage}`);
         toast({
-          title: "Error",
-          description: "Failed to fetch track info.",
+          title: "Connection Error",
+          description: "Unable to connect to the backend. Please try again later.",
           variant: "destructive",
         });
       } finally {
@@ -91,45 +117,28 @@ const MusicDownload = () => {
       }
     };
 
-    fetchTrackInfo();
-  }, [musicId, toast]);
+    fetchVideo();
+  }, [videoId, videoUrl, toast]);
 
   /**
-   * Handle MP3 download
+   * Handle video download request
    */
-  const handleDownload = async () => {
-    if (!musicId) return;
+  const handleDownload = (quality: string, includeTitle: boolean): string => {
+    toast({
+      title: "Download Started",
+      description: `Starting ${quality} download...`,
+    });
 
-    setIsDownloading(true);
-    setDownloadComplete(false);
+    const downloadId = `${Date.now()}-${quality}`;
+    startDownload(videoUrl, quality, includeTitle);
+    return downloadId;
+  };
 
-    try {
-      // Create download link
-      const downloadUrl = `${API_URL}/api/music/download?musicId=${musicId}`;
-      
-      // Create temporary anchor and trigger download
-      const link = document.createElement("a");
-      link.href = downloadUrl;
-      link.download = trackInfo?.title ? `${trackInfo.title}.mp3` : "track.mp3";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      setDownloadComplete(true);
-      toast({
-        title: "Download Started",
-        description: "Your MP3 download has started.",
-      });
-    } catch (err) {
-      console.error("Download error:", err);
-      toast({
-        title: "Download Failed",
-        description: "Unable to start download. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsDownloading(false);
-    }
+  /**
+   * Handle retry for failed downloads
+   */
+  const handleRetry = (downloadId: string) => {
+    retryDownload(downloadId, videoUrl);
   };
 
   return (
@@ -143,7 +152,7 @@ const MusicDownload = () => {
       <Header />
 
       <main className="relative pt-28 pb-16 px-4 flex-1">
-        <div className="container mx-auto max-w-2xl">
+        <div className="container mx-auto max-w-4xl">
           {/* Back Button */}
           <Button
             variant="ghost"
@@ -154,92 +163,41 @@ const MusicDownload = () => {
             Back to Music
           </Button>
 
-          {/* Loading State */}
-          {isLoading && (
-            <div className="glass-strong rounded-2xl p-12 text-center space-y-4 animate-fade-in">
-              <Loader2 className="w-12 h-12 text-primary mx-auto animate-spin" />
-              <h2 className="font-display text-xl font-semibold">Fetching Track Info...</h2>
-              <p className="text-muted-foreground">Please wait while we get the track details.</p>
-            </div>
-          )}
-
           {/* Error State */}
           {error && !isLoading && (
-            <div className="glass-strong rounded-2xl p-8 text-center space-y-4 animate-fade-in">
-              <AlertCircle className="w-12 h-12 text-destructive mx-auto" />
+            <div className="glass-strong rounded-2xl p-8 text-center space-y-4">
               <h2 className="font-display text-2xl font-bold text-destructive">Error</h2>
               <p className="text-muted-foreground">{error}</p>
-              <Button variant="hero" onClick={() => navigate("/music")}>
-                Try Again
-              </Button>
+              <div className="flex gap-4 justify-center">
+                <Button variant="hero" onClick={() => navigate("/music")}>
+                  Try Again
+                </Button>
+                <Button variant="glass" onClick={() => window.location.reload()}>
+                  Reload
+                </Button>
+              </div>
             </div>
           )}
 
-          {/* Track Info Display */}
-          {trackInfo && !isLoading && !error && (
-            <div className="glass-strong rounded-2xl overflow-hidden animate-fade-in">
-              {/* Track Thumbnail */}
-              <div className="relative aspect-video bg-background/50">
-                <img
-                  src={trackInfo.thumbnail}
-                  alt={trackInfo.title}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
-                <div className="absolute bottom-4 left-4 right-4">
-                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full glass text-xs text-muted-foreground">
-                    <Music2 className="w-3 h-3" />
-                    {trackInfo.duration}
-                  </span>
-                </div>
-              </div>
+          {/* Loading State */}
+          {isLoading && (
+            <section className="mb-14">
+              <LoadingSpinner />
+            </section>
+          )}
 
-              {/* Track Details */}
-              <div className="p-6 space-y-4">
-                <div>
-                  <h1 className="font-display text-2xl font-bold line-clamp-2">
-                    {trackInfo.title}
-                  </h1>
-                  <p className="text-muted-foreground mt-1">{trackInfo.artist}</p>
-                  {trackInfo.album && (
-                    <p className="text-muted-foreground/70 text-sm mt-1">{trackInfo.album}</p>
-                  )}
-                </div>
-
-                {/* Download Button */}
-                <div className="pt-4 border-t border-border/30">
-                  <Button
-                    variant="hero"
-                    size="lg"
-                    onClick={handleDownload}
-                    disabled={isDownloading}
-                    className="w-full gap-2"
-                  >
-                    {isDownloading ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        Preparing Download...
-                      </>
-                    ) : downloadComplete ? (
-                      <>
-                        <CheckCircle2 className="w-5 h-5" />
-                        Download Started!
-                      </>
-                    ) : (
-                      <>
-                        <Download className="w-5 h-5" />
-                        Download MP3
-                      </>
-                    )}
-                  </Button>
-                </div>
-
-                {/* Info Note */}
-                <p className="text-muted-foreground/70 text-xs text-center">
-                  High-quality 320kbps MP3 with embedded metadata
-                </p>
-              </div>
-            </div>
+          {/* Video Info Display - Uses same VideoCard as main site */}
+          {videoInfo && !isLoading && (
+            <section className="mb-14 animate-fade-in">
+              <VideoCard
+                video={videoInfo}
+                onDownload={handleDownload}
+                downloads={downloads}
+                onDownloadFile={downloadFile}
+                onRetry={handleRetry}
+                getActiveDownload={getActiveDownload}
+              />
+            </section>
           )}
         </div>
       </main>
