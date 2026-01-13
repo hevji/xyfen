@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Sparkles, Shield, Zap, Settings, Flame } from "lucide-react";
+import { Sparkles, Shield, Zap, Settings, Flame, Music2 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import UrlInput from "@/components/UrlInput";
@@ -119,8 +119,16 @@ const Index = () => {
             </div>
           </section>
 
-          {/* Backend Setup Link */}
-          <section className="text-center animate-fade-in" style={{ animationDelay: "0.7s" }}>
+          {/* Action Buttons */}
+          <section className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in" style={{ animationDelay: "0.7s" }}>
+            <Button
+              variant="hero"
+              onClick={() => navigate("/music")}
+              className="gap-2"
+            >
+              <Music2 className="w-4 h-4" />
+              YouTube Music Downloader
+            </Button>
             <Button
               variant="glass"
               onClick={() => navigate("/backend-setup")}
