@@ -8,6 +8,8 @@ import { ThemeProvider } from "next-themes";
 
 import Index from "./pages/Index";
 import Download from "./pages/Download";
+import Music from "./pages/Music";
+import MusicDownload from "./pages/MusicDownload";
 import BackendSetup from "./pages/BackendSetup";
 import TermsOfService from "./pages/TermsOfService";
 import NotFound from "./pages/NotFound";
@@ -26,6 +28,8 @@ const MainApp = () => {
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/download" element={<Download />} />
+        <Route path="/music" element={<Music />} />
+        <Route path="/music/download" element={<MusicDownload />} />
         <Route path="/backend-setup" element={<BackendSetup />} />
         <Route path="/terms-of-service" element={<TermsOfService />} />
         <Route path="*" element={<NotFound />} />
