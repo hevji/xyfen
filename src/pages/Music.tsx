@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Music2, Sparkles, Shield, Zap, Flame } from "lucide-react";
+import { Music2, Flame, Sparkles, Shield, Zap } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -8,63 +8,39 @@ import { useToast } from "@/hooks/use-toast";
 
 /**
  * Extract video ID from YouTube Music URLs
- * Normalizes YouTube Music URLs to standard YouTube video IDs
  */
 const extractMusicVideoId = (input: string): string | null => {
   const trimmed = input.trim();
   
-  // Direct ID format (11 characters)
-  if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) {
-    return trimmed;
-  }
+  if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) return trimmed;
 
-  // Parse URL to extract video ID
   try {
     const url = new URL(trimmed);
-    
-    // YouTube Music: music.youtube.com/watch?v=ID
-    if (url.hostname === "music.youtube.com" || url.hostname === "www.music.youtube.com") {
-      const videoId = url.searchParams.get("v");
-      if (videoId && /^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
-        return videoId;
-      }
-    }
-    
-    // Standard YouTube: youtube.com/watch?v=ID
-    if (url.hostname === "youtube.com" || url.hostname === "www.youtube.com") {
-      const videoId = url.searchParams.get("v");
-      if (videoId && /^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
-        return videoId;
-      }
-    }
-    
-    // Short URL: youtu.be/ID
-    if (url.hostname === "youtu.be") {
-      const videoId = url.pathname.slice(1).split("?")[0];
-      if (videoId && /^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
-        return videoId;
-      }
-    }
-  } catch {
-    // Not a valid URL, try regex patterns as fallback
-    const patterns = [
-      /music\.youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,
-      /youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,
-      /youtu\.be\/([a-zA-Z0-9_-]{11})/,
-    ];
+    const host = url.hostname.toLowerCase();
 
-    for (const pattern of patterns) {
-      const match = trimmed.match(pattern);
-      if (match) return match[1];
+    if (host.includes("music.youtube.com") || host.includes("youtube.com")) {
+      const id = url.searchParams.get("v");
+      if (id && /^[a-zA-Z0-9_-]{11}$/.test(id)) return id;
     }
+    if (host === "youtu.be") {
+      const id = url.pathname.slice(1).split("?")[0];
+      if (id && /^[a-zA-Z0-9_-]{11}$/.test(id)) return id;
+    }
+  } catch {}
+
+  const patterns = [
+    /music\.youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,
+    /youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,
+    /youtu\.be\/([a-zA-Z0-9_-]{11})/,
+  ];
+  for (const p of patterns) {
+    const m = trimmed.match(p);
+    if (m) return m[1];
   }
 
   return null;
 };
 
-/**
- * Music Page - YouTube Music MP3 Downloader (matches main site layout)
- */
 const Music = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -72,34 +48,28 @@ const Music = () => {
   const [isFocused, setIsFocused] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  /**
-   * Handle form submission - extract video ID and navigate to download page
-   */
   const handleFetchMusic = (e: React.FormEvent) => {
     e.preventDefault();
-    
     const videoId = extractMusicVideoId(url);
-    
-    // Debug logging
-    console.log("[Music] Original URL:", url);
-    console.log("[Music] Extracted Video ID:", videoId);
-    
+
+    console.log("[Music] URL:", url);
+    console.log("[Music] Video ID:", videoId);
+
     if (!videoId) {
       toast({
         title: "Invalid URL",
-        description: "Please enter a valid YouTube Music URL or video ID.",
+        description: "Enter a valid YouTube Music link or video ID.",
         variant: "destructive",
       });
       return;
     }
-    
-    // Navigate to music download page with videoId
+
     navigate(`/music/download?videoId=${videoId}`);
   };
 
   return (
-    <div className="min-h-screen relative flex flex-col">
-      {/* Background effects */}
+    <div className="min-h-screen flex flex-col relative">
+      {/* Background Effects */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-primary/8 rounded-full blur-3xl animate-pulse-slow" />
         <div className="absolute bottom-0 right-0 w-[700px] h-[500px] bg-accent/6 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: "2s" }} />
@@ -109,28 +79,24 @@ const Music = () => {
 
       <Header />
 
-      {/* Main Content */}
       <main className="relative pt-28 pb-16 px-4 flex-1">
         <div className="container mx-auto max-w-4xl">
-          {/* Hero Section */}
+          {/* Hero */}
           <section className="text-center space-y-8 mb-14">
-            {/* Floating badge */}
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass text-sm text-muted-foreground animate-fade-in">
               <Flame className="w-4 h-4 text-primary" />
               <span>MP3 Downloads</span>
             </div>
-
             <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight animate-fade-in" style={{ animationDelay: "0.1s" }}>
               YouTube Music
               <span className="block gradient-text glow-text mt-2">MP3 Downloader</span>
             </h1>
             <p className="text-muted-foreground text-lg max-w-xl mx-auto animate-fade-in leading-relaxed" style={{ animationDelay: "0.2s" }}>
-              Download any YouTube Music track as high-quality MP3.
-              Just paste the URL and hit fetch.
+              Download any YouTube Music track as high-quality MP3. Paste the URL and hit fetch.
             </p>
           </section>
 
-          {/* URL Input Section */}
+          {/* Input Section */}
           <section className="mb-14 animate-fade-in" style={{ animationDelay: "0.3s" }}>
             <form onSubmit={handleFetchMusic} className="space-y-4">
               <div className={`relative glass-strong rounded-2xl p-2 transition-all duration-300 ${isFocused ? 'ring-2 ring-primary/50 shadow-glow' : ''}`}>
@@ -152,7 +118,7 @@ const Music = () => {
                     variant="hero"
                     size="lg"
                     disabled={isLoading || !url.trim()}
-                    className="mr-2 px-8 py-6 text-lg font-semibold"
+                    className="flex-none mr-2 px-8 py-3 text-lg font-semibold rounded-xl"
                   >
                     <Music2 className="w-5 h-5 mr-2" />
                     Fetch Music
@@ -165,7 +131,7 @@ const Music = () => {
             </form>
           </section>
 
-          {/* Features Grid */}
+          {/* Features */}
           <section className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-14">
             <div className="glass rounded-2xl p-7 text-center space-y-4 animate-fade-in interactive-card" style={{ animationDelay: "0.4s" }}>
               <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/10 flex items-center justify-center mx-auto">
@@ -196,7 +162,7 @@ const Music = () => {
             </div>
           </section>
 
-          {/* Back to main site */}
+          {/* Back Button */}
           <section className="text-center animate-fade-in" style={{ animationDelay: "0.7s" }}>
             <Button
               variant="glass"
