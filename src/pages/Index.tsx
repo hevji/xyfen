@@ -1,3 +1,6 @@
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { Sparkles, Shield, Zap, Settings, Flame, Music2 } from "lucide-react";
 import Header from "@/components/Header";
@@ -145,5 +148,7 @@ const Index = () => {
     </div>
   );
 };
+
+// Wrap your exported Index in BrowserRouter at the top-level in index.tsx (not here)
 
 export default Index;
